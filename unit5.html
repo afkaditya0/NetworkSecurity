@@ -1,0 +1,1994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unit V — Security in Networks</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0f;
+    --surface: #13131a;
+    --card: #18181f;
+    --border: rgba(255,255,255,0.07);
+    --accent: #c8a96e;
+    --accent2: #7eb8c9;
+    --accent3: #a98ae0;
+    --accent4: #7ec99a;
+    --accent5: #c97e7e;
+    --text: #e8e6df;
+    --muted: #8a8882;
+    --dim: #4a4845;
+    --code-bg: #0a0a0e;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);color:var(--text);
+    font-family:'Outfit',sans-serif;font-weight:300;line-height:1.7;overflow-x:hidden;
+  }
+  body::before{
+    content:'';position:fixed;inset:0;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events:none;z-index:999;opacity:.4;
+  }
+
+  .hero{
+    min-height:100vh;display:flex;flex-direction:column;justify-content:center;
+    padding:4rem 6vw;position:relative;border-bottom:1px solid var(--border);
+  }
+  .hero::after{
+    content:'';position:absolute;top:0;right:0;width:55%;height:100%;
+    background:radial-gradient(ellipse at 80% 40%, rgba(169,138,224,0.06) 0%, transparent 60%),
+               radial-gradient(ellipse at 95% 80%, rgba(126,201,154,0.05) 0%, transparent 50%);
+    pointer-events:none;
+  }
+  .hero-label{
+    font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--accent3);margin-bottom:1.5rem;
+    display:flex;align-items:center;gap:.75rem;
+  }
+  .hero-label::before{content:'';display:block;width:2rem;height:1px;background:var(--accent3);}
+  .hero h1{
+    font-family:'Cormorant Garamond',serif;
+    font-size:clamp(3.5rem,8vw,7rem);font-weight:300;line-height:1.05;
+    letter-spacing:-.02em;max-width:900px;
+  }
+  .hero h1 em{font-style:italic;color:var(--accent3);}
+  .hero-sub{margin-top:2rem;font-size:.95rem;color:var(--muted);max-width:560px;font-weight:300;}
+
+  .toc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.5rem;margin-top:3rem;max-width:1000px;}
+  .toc-item{
+    padding:.75rem 1rem;border:1px solid var(--border);border-radius:4px;
+    font-size:.8rem;color:var(--muted);cursor:pointer;transition:all .2s;
+    text-decoration:none;display:flex;align-items:center;gap:.5rem;
+  }
+  .toc-item:hover{border-color:var(--accent3);color:var(--accent3);background:rgba(169,138,224,0.04);}
+  .toc-item .dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0;}
+  .toc-item.must::after{content:'★';color:var(--accent);font-size:.7rem;margin-left:auto;}
+
+  .unit-nav{display:flex;gap:.5rem;margin-bottom:2.5rem;}
+  .unit-nav a{
+    font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;
+    padding:.4rem .9rem;border:1px solid var(--border);
+    text-decoration:none;color:var(--muted);border-radius:3px;transition:all .2s;
+  }
+  .unit-nav a:hover{border-color:var(--accent);color:var(--accent);}
+  .unit-nav a.current{border-color:var(--accent3);color:var(--accent3);background:rgba(169,138,224,0.06);}
+
+  .container{max-width:1200px;margin:0 auto;padding:0 6vw;}
+  .section{padding:5rem 0;border-bottom:1px solid var(--border);}
+  .section-header{display:flex;align-items:baseline;gap:1.5rem;margin-bottom:3rem;}
+  .section-num{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--dim);letter-spacing:.1em;flex-shrink:0;}
+  .section-title{font-family:'Cormorant Garamond',serif;font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:400;letter-spacing:-.01em;}
+  .section-title span{color:var(--accent3);}
+  .section-title.must::after{content:' ★';color:var(--accent);font-size:.6em;vertical-align:super;}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1px;background:var(--border);}
+  .cards.two{grid-template-columns:repeat(auto-fill,minmax(380px,1fr));}
+  .card{background:var(--card);padding:1.75rem;transition:background .2s;}
+  .card:hover{background:rgba(30,30,40,0.9);}
+  .card.must{border-top:2px solid var(--accent);}
+  .card-tag{
+    font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--accent3);margin-bottom:.75rem;
+  }
+  .card-tag.gold{color:var(--accent);}
+  .card h3{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:500;margin-bottom:.75rem;}
+  .card p,ul{font-size:.88rem;color:var(--muted);line-height:1.8;}
+  .card ul{list-style:none;padding:0;}
+  .card ul li{padding:.15rem 0;}
+  .card ul li::before{content:'→ ';color:var(--accent3);font-size:.75rem;}
+
+  .axiom-list{display:flex;flex-direction:column;gap:.5rem;}
+  .axiom{
+    display:flex;gap:1rem;align-items:flex-start;padding:.75rem 1rem;
+    border-left:2px solid var(--dim);background:var(--surface);
+    font-size:.87rem;color:var(--muted);transition:border-color .2s;
+  }
+  .axiom:hover{border-color:var(--accent3);}
+  .axiom-id{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--accent3);flex-shrink:0;margin-top:.1rem;}
+
+  .formula{
+    background:var(--code-bg);border:1px solid var(--border);border-left:3px solid var(--accent3);
+    padding:1rem 1.25rem;font-family:'DM Mono',monospace;font-size:.82rem;color:#ccc;
+    overflow-x:auto;margin:.75rem 0;line-height:1.9;border-radius:0 4px 4px 0;white-space:pre-wrap;
+  }
+  .formula.gold{border-left-color:var(--accent);}
+  .formula .hl{color:var(--accent);}
+  .formula .hl2{color:var(--accent2);}
+  .formula .hl3{color:var(--accent3);}
+  .formula .hl4{color:var(--accent4);}
+  .formula .hl5{color:var(--accent5);}
+
+  .flow{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin:1.5rem 0;}
+  .flow-node{padding:.5rem 1.25rem;border:1px solid var(--border);border-radius:2px;font-size:.83rem;background:var(--surface);color:var(--text);}
+  .flow-node.active{border-color:var(--accent3);color:var(--accent3);background:rgba(169,138,224,0.06);}
+  .flow-node.gold{border-color:var(--accent);color:var(--accent);background:rgba(200,169,110,0.06);}
+  .flow-arrow{color:var(--dim);font-size:.8rem;}
+
+  .data-table{width:100%;border-collapse:collapse;font-size:.82rem;}
+  .data-table th{
+    text-align:left;padding:.6rem 1rem;background:var(--surface);
+    font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--accent3);border-bottom:1px solid var(--border);
+  }
+  .data-table td{padding:.6rem 1rem;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--muted);vertical-align:middle;}
+  .data-table tr:hover td{background:rgba(255,255,255,0.02);}
+  .data-table td:first-child{color:var(--text);}
+
+  .steps{display:flex;flex-direction:column;gap:0;}
+  .step{display:flex;gap:1.5rem;padding:1rem 0;border-bottom:1px solid var(--border);}
+  .step:last-child{border-bottom:none;}
+  .step-num{font-family:'DM Mono',monospace;font-size:1.8rem;font-weight:300;color:var(--dim);flex-shrink:0;min-width:2.5rem;line-height:1.2;}
+  .step-body h4{font-size:.9rem;font-weight:500;margin-bottom:.2rem;color:var(--text);}
+  .step-body p{font-size:.83rem;color:var(--muted);}
+
+  .badge{
+    display:inline-block;padding:.15rem .6rem;
+    background:rgba(200,169,110,0.1);border:1px solid rgba(200,169,110,0.25);border-radius:2px;
+    font-size:.7rem;color:var(--accent);font-family:'DM Mono',monospace;letter-spacing:.06em;
+  }
+  .badge.blue{background:rgba(126,184,201,0.1);border-color:rgba(126,184,201,0.25);color:var(--accent2);}
+  .badge.purple{background:rgba(169,138,224,0.1);border-color:rgba(169,138,224,0.25);color:var(--accent3);}
+  .badge.green{background:rgba(126,201,154,0.1);border-color:rgba(126,201,154,0.25);color:var(--accent4);}
+  .badge.red{background:rgba(201,126,126,0.1);border-color:rgba(201,126,126,0.25);color:var(--accent5);}
+  .badge.must{background:rgba(200,169,110,0.18);border-color:rgba(200,169,110,0.45);color:var(--accent);}
+
+  .callout{
+    padding:1rem 1.25rem;border-left:3px solid var(--accent3);
+    background:rgba(169,138,224,0.04);font-size:.86rem;color:var(--muted);margin:.75rem 0;
+  }
+  .callout.warn{border-color:var(--accent5);background:rgba(201,126,126,0.04);}
+  .callout.green{border-color:var(--accent4);background:rgba(126,201,154,0.04);}
+  .callout.gold{border-color:var(--accent);background:rgba(200,169,110,0.05);}
+  .callout.blue{border-color:var(--accent2);background:rgba(126,184,201,0.04);}
+  .callout strong{color:var(--text);}
+
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);}
+  .compare-col{background:var(--card);padding:1.5rem;}
+  .compare-col h4{font-family:'Cormorant Garamond',serif;font-size:1.1rem;margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border);}
+
+  .divider{
+    display:flex;align-items:center;gap:1rem;margin:2.5rem 0;color:var(--dim);font-size:.7rem;
+    font-family:'DM Mono',monospace;letter-spacing:.1em;text-transform:uppercase;
+  }
+  .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+  .divider.must{color:var(--accent);}
+  .divider.must::before,.divider.must::after{background:linear-gradient(90deg, transparent, rgba(200,169,110,0.4), transparent);}
+
+  .reveal{opacity:0;transform:translateY(16px);transition:opacity .55s ease,transform .55s ease;}
+  .reveal.visible{opacity:1;transform:translateY(0);}
+
+  .float-nav{position:fixed;top:50%;right:1.5rem;transform:translateY(-50%);display:flex;flex-direction:column;gap:.5rem;z-index:100;}
+  .float-dot{width:6px;height:6px;border-radius:50%;background:var(--dim);cursor:pointer;transition:all .2s;}
+  .float-dot:hover,.float-dot.active{background:var(--accent3);transform:scale(1.4);}
+
+  .stack-diagram{
+    display:flex;flex-direction:column;gap:2px;
+    background:var(--border);border:1px solid var(--border);border-radius:4px;
+    overflow:hidden;margin:1rem 0;max-width:700px;
+  }
+  .stack-row{
+    display:flex;background:var(--card);gap:2px;
+  }
+  .stack-cell{
+    flex:1;padding:.75rem 1rem;text-align:center;
+    background:var(--surface);font-size:.82rem;color:var(--text);
+    font-family:'DM Mono',monospace;
+  }
+  .stack-cell.hl{background:rgba(169,138,224,0.08);color:var(--accent3);}
+  .stack-cell.gold{background:rgba(200,169,110,0.08);color:var(--accent);}
+  .stack-cell.blue{background:rgba(126,184,201,0.08);color:var(--accent2);}
+
+  @media(max-width:768px){
+    .float-nav{display:none;}
+    .compare{grid-template-columns:1fr;}
+    .cards.two{grid-template-columns:1fr;}
+    .hero{padding:3rem 5vw;}
+  }
+</style>
+</head>
+<body>
+
+<nav class="float-nav" id="floatNav">
+  <div class="float-dot" data-target="hero" title="Top"></div>
+  <div class="float-dot" data-target="s1" title="Web Security"></div>
+  <div class="float-dot" data-target="s2" title="SSL/TLS"></div>
+  <div class="float-dot" data-target="s3" title="HTTPS"></div>
+  <div class="float-dot" data-target="s4" title="SSH"></div>
+  <div class="float-dot" data-target="s5" title="SET"></div>
+  <div class="float-dot" data-target="s6" title="Email & PGP"></div>
+  <div class="float-dot" data-target="s7" title="S/MIME"></div>
+  <div class="float-dot" data-target="s8" title="DKIM"></div>
+  <div class="float-dot" data-target="s9" title="Intruders & IDS"></div>
+  <div class="float-dot" data-target="s10" title="Malicious Software"></div>
+  <div class="float-dot" data-target="s11" title="Firewalls"></div>
+  <div class="float-dot" data-target="s12" title="Access Control"></div>
+  <div class="float-dot" data-target="s13" title="Case Studies"></div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="container">
+    <div class="unit-nav">
+      <a href="index.html">Unit III</a>
+      <a href="unit4.html">Unit IV</a>
+      <a href="unit5.html" class="current">Unit V</a>
+    </div>
+    <div class="hero-label">Network Security & Cryptography</div>
+    <h1>Unit <em>V</em><br>Security in<br>Networks</h1>
+    <p class="hero-sub">Web security (SSL/TLS, HTTPS), SSH, Secure Electronic Transactions (SET), email security (PGP, S/MIME, DKIM), intruders &amp; IDS, malicious software, firewalls, access control, and case studies. Star (★) marks must-know topics.</p>
+    <nav class="toc-grid">
+      <a href="#s1" class="toc-item"><span class="dot"></span>Web Security Overview</a>
+      <a href="#s2" class="toc-item must"><span class="dot"></span>SSL &amp; TLS</a>
+      <a href="#s3" class="toc-item must"><span class="dot"></span>HTTPS</a>
+      <a href="#s4" class="toc-item must"><span class="dot"></span>Secure Shell (SSH)</a>
+      <a href="#s5" class="toc-item must"><span class="dot"></span>SET — Dual Signature</a>
+      <a href="#s6" class="toc-item must"><span class="dot"></span>Email Security &amp; PGP</a>
+      <a href="#s7" class="toc-item must"><span class="dot"></span>S/MIME</a>
+      <a href="#s8" class="toc-item"><span class="dot"></span>DKIM</a>
+      <a href="#s9" class="toc-item must"><span class="dot"></span>Intruders &amp; IDS</a>
+      <a href="#s10" class="toc-item must"><span class="dot"></span>Malicious Software</a>
+      <a href="#s11" class="toc-item must"><span class="dot"></span>Firewalls</a>
+      <a href="#s12" class="toc-item"><span class="dot"></span>Access Control</a>
+      <a href="#s13" class="toc-item"><span class="dot"></span>Case Studies</a>
+    </nav>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 1 — WEB SECURITY
+═══════════════════════════════════════ -->
+<section class="section" id="s1">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">01</span>
+      <h2 class="section-title">Web <span>Security</span></h2>
+    </div>
+
+    <div class="callout reveal">
+      The Web is now widely used by business, government, individuals — <strong>but Internet &amp; Web are vulnerable</strong>. A variety of threats exist: <em>integrity, confidentiality, denial of service, authentication</em>. Added security mechanisms are required at multiple layers.
+    </div>
+
+    <div class="divider reveal">Web Traffic Security Approaches — Three Layers</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Network Level (a)</div>
+        <h3>IP / IPsec</h3>
+        <div class="stack-diagram">
+          <div class="stack-row"><div class="stack-cell">HTTP</div><div class="stack-cell">FTP</div><div class="stack-cell">SMTP</div></div>
+          <div class="stack-row"><div class="stack-cell">TCP</div></div>
+          <div class="stack-row"><div class="stack-cell hl">IP / IPsec</div></div>
+        </div>
+        <p>Security is applied at the IP layer — transparent to applications.</p>
+      </div>
+      <div class="card must">
+        <div class="card-tag gold">Transport Level (b)</div>
+        <h3>SSL / TLS</h3>
+        <div class="stack-diagram">
+          <div class="stack-row"><div class="stack-cell">HTTP</div><div class="stack-cell">FTP</div><div class="stack-cell">SMTP</div></div>
+          <div class="stack-row"><div class="stack-cell gold">SSL or TLS</div></div>
+          <div class="stack-row"><div class="stack-cell">TCP</div></div>
+          <div class="stack-row"><div class="stack-cell">IP</div></div>
+        </div>
+        <p>Security between TCP and the application — the dominant Web security model.</p>
+      </div>
+      <div class="card">
+        <div class="card-tag">Application Level (c)</div>
+        <h3>S/MIME, Kerberos</h3>
+        <div class="stack-diagram">
+          <div class="stack-row"><div class="stack-cell blue">S/MIME</div></div>
+          <div class="stack-row"><div class="stack-cell">Kerberos</div><div class="stack-cell">SMTP</div><div class="stack-cell">HTTP</div></div>
+          <div class="stack-row"><div class="stack-cell">UDP</div><div class="stack-cell">TCP</div></div>
+          <div class="stack-row"><div class="stack-cell">IP</div></div>
+        </div>
+        <p>Security at the application — e.g., email (S/MIME), Kerberos.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 2 — SSL / TLS
+═══════════════════════════════════════ -->
+<section class="section" id="s2">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">02</span>
+      <h2 class="section-title must"><span>SSL</span> — Secure Socket Layer</h2>
+    </div>
+
+    <div class="callout gold reveal">
+      <strong>★ SSL</strong> — transport layer security service. Originally developed by <strong>Netscape</strong>; v3 designed with public input; subsequently became an Internet standard known as <strong>TLS (Transport Layer Security)</strong>. Uses <strong>TCP</strong> to provide a reliable end-to-end service. <strong>SSL has two layers of protocols</strong>.
+    </div>
+
+    <div class="divider must reveal">★ SSL Architecture</div>
+    <div class="stack-diagram reveal" style="max-width:800px">
+      <div class="stack-row">
+        <div class="stack-cell gold">SSL Handshake Protocol</div>
+        <div class="stack-cell gold">SSL Change Cipher Spec</div>
+        <div class="stack-cell gold">SSL Alert Protocol</div>
+        <div class="stack-cell">HTTP</div>
+      </div>
+      <div class="stack-row"><div class="stack-cell hl">SSL Record Protocol</div></div>
+      <div class="stack-row"><div class="stack-cell">TCP</div></div>
+      <div class="stack-row"><div class="stack-cell">IP</div></div>
+    </div>
+
+    <div class="cards two reveal" style="margin-top:2rem">
+      <div class="card">
+        <div class="card-tag">SSL Connection</div>
+        <h3>Transient peer-to-peer link</h3>
+        <ul>
+          <li>A transient, peer-to-peer, communications link</li>
+          <li>Associated with 1 SSL session</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">SSL Session</div>
+        <h3>Client ↔ Server association</h3>
+        <ul>
+          <li>An association between client &amp; server</li>
+          <li>Created by the <strong>Handshake Protocol</strong></li>
+          <li>Defines a set of cryptographic parameters</li>
+          <li>May be shared by multiple SSL connections</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider must reveal">★ SSL Record Protocol Services</div>
+    <div class="cards reveal">
+      <div class="card must">
+        <div class="card-tag gold">Confidentiality</div>
+        <h3>Symmetric encryption</h3>
+        <ul>
+          <li>Shared secret key defined by Handshake Protocol</li>
+          <li>Supported ciphers: <strong>AES, IDEA, RC2-40, DES-40, DES, 3DES, Fortezza, RC4-40, RC4-128</strong></li>
+          <li>Message is <strong>compressed before encryption</strong></li>
+        </ul>
+      </div>
+      <div class="card must">
+        <div class="card-tag gold">Message Integrity</div>
+        <h3>MAC</h3>
+        <ul>
+          <li>Using a MAC with shared secret key</li>
+          <li>Similar to HMAC but with different padding</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider reveal">SSL Record Protocol Operation — Pipeline</div>
+    <div class="flow reveal">
+      <div class="flow-node">Application Data</div>
+      <div class="flow-arrow">⟶</div>
+      <div class="flow-node">Fragment</div>
+      <div class="flow-arrow">⟶</div>
+      <div class="flow-node active">Compress</div>
+      <div class="flow-arrow">⟶</div>
+      <div class="flow-node active">Add MAC</div>
+      <div class="flow-arrow">⟶</div>
+      <div class="flow-node gold">Encrypt</div>
+      <div class="flow-arrow">⟶</div>
+      <div class="flow-node">Append SSL Record Header</div>
+    </div>
+
+    <div class="divider reveal">SSL Change Cipher Spec Protocol</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Tiny but critical</div>
+        <h3>A single-byte message</h3>
+        <ul>
+          <li>One of 3 SSL-specific protocols using the SSL Record protocol</li>
+          <li>A single message</li>
+          <li>Causes pending state to become current</li>
+          <li>Hence updating the cipher suite in use</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Packet</div>
+        <h3>1 byte</h3>
+        <div class="formula">[ 1 ]</div>
+      </div>
+    </div>
+
+    <div class="divider reveal">SSL Alert Protocol</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Severity</div>
+        <h3>Warning or Fatal</h3>
+        <ul>
+          <li>Conveys SSL-related alerts to peer entity</li>
+          <li>Two levels: <strong>warning</strong> or <strong>fatal</strong></li>
+          <li>Compressed &amp; encrypted like all SSL data</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Fatal Alerts</div>
+        <h3>Connection terminates</h3>
+        <ul>
+          <li>unexpected_message</li>
+          <li>bad_record_mac</li>
+          <li>decompression_failure</li>
+          <li>handshake_failure</li>
+          <li>illegal_parameter</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Warning Alerts</div>
+        <h3>Connection may continue</h3>
+        <ul>
+          <li>close_notify</li>
+          <li>no_certificate</li>
+          <li>bad_certificate, unsupported_certificate</li>
+          <li>certificate_revoked, certificate_expired, certificate_unknown</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider must reveal">★ SSL Handshake Protocol — 4 Phases</div>
+    <div class="callout reveal">
+      Allows server &amp; client to: <strong>authenticate each other</strong>, <strong>negotiate encryption &amp; MAC algorithms</strong>, and <strong>negotiate cryptographic keys</strong>. Comprises a series of messages in 4 phases.
+    </div>
+    <div class="steps reveal">
+      <div class="step"><span class="step-num">01</span><div class="step-body"><h4>Establish Security Capabilities</h4><p><code>client_hello</code> ↔ <code>server_hello</code> — protocol version, session ID, cipher suite, compression method, initial random numbers.</p></div></div>
+      <div class="step"><span class="step-num">02</span><div class="step-body"><h4>Server Authentication &amp; Key Exchange</h4><p>Server may send <code>certificate</code>, <code>server_key_exchange</code>, <code>certificate_request</code>, then <code>server_hello_done</code>.</p></div></div>
+      <div class="step"><span class="step-num">03</span><div class="step-body"><h4>Client Authentication &amp; Key Exchange</h4><p>Client sends <code>certificate</code> if requested, <code>client_key_exchange</code>, optionally <code>certificate_verify</code>.</p></div></div>
+      <div class="step"><span class="step-num">04</span><div class="step-body"><h4>Finish</h4><p>Both sides: <code>change_cipher_spec</code> then <code>finished</code>. Cipher suite changes; handshake done.</p></div></div>
+    </div>
+    <div class="formula reveal" style="margin-top:1rem">Handshake message format:
+ <span class="hl">[ Type (1B) ][ Length (3B) ][ Content (≥0B) ]</span></div>
+
+    <div class="divider must reveal">★ TLS — Transport Layer Security</div>
+    <div class="cards reveal">
+      <div class="card must">
+        <div class="card-tag gold">IETF Standard RFC 2246</div>
+        <h3>Similar to SSLv3, with minor differences</h3>
+        <ul>
+          <li>Different record-format version number</li>
+          <li>Uses <strong>HMAC</strong> for MAC</li>
+          <li>A pseudo-random function expands secrets (based on HMAC using SHA-1 or MD5)</li>
+          <li>Additional alert codes</li>
+          <li>Some changes in supported ciphers</li>
+          <li>Changes in certificate types &amp; negotiations</li>
+          <li>Changes in crypto computations &amp; padding</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 3 — HTTPS
+═══════════════════════════════════════ -->
+<section class="section" id="s3">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">03</span>
+      <h2 class="section-title must"><span>HTTPS</span></h2>
+    </div>
+
+    <div class="callout gold reveal">
+      <strong>★ HTTPS = HTTP over SSL/TLS.</strong> Combination of HTTP and SSL/TLS to secure communications between browser and server. Documented in <strong>RFC 2818</strong>. No fundamental change using either SSL or TLS.
+    </div>
+
+    <div class="cards two reveal" style="margin-top:2rem">
+      <div class="card must">
+        <div class="card-tag gold">Usage</div>
+        <h3>URL &amp; Port</h3>
+        <ul>
+          <li>Use <code>https://</code> rather than <code>http://</code></li>
+          <li>Port <strong>443</strong> rather than 80</li>
+        </ul>
+      </div>
+      <div class="card must">
+        <div class="card-tag gold">What's Encrypted</div>
+        <h3>Full HTTP request</h3>
+        <ul>
+          <li>URL</li>
+          <li>Document contents</li>
+          <li>Form data</li>
+          <li>Cookies</li>
+          <li>HTTP headers</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider reveal">HTTPS Use</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Connection Initiation</div>
+        <h3>TLS first, then HTTP</h3>
+        <ul>
+          <li>TLS handshake completes</li>
+          <li>Then HTTP request(s) are exchanged</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Connection Closure</div>
+        <h3>Orderly shutdown</h3>
+        <ul>
+          <li>Send <code>Connection: close</code> in HTTP record</li>
+          <li>TLS-level exchange <code>close_notify</code> alerts</li>
+          <li>Then close TCP connection</li>
+          <li>Must handle TCP close before alert exchange is sent or completed</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 4 — SSH
+═══════════════════════════════════════ -->
+<section class="section" id="s4">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">04</span>
+      <h2 class="section-title must">Secure Shell <span>(SSH)</span></h2>
+    </div>
+
+    <div class="callout gold reveal">
+      <strong>★ SSH</strong> — protocol for secure network communications, designed to be simple &amp; inexpensive. <strong>SSH1</strong> provided secure remote logon — replaced TELNET and other insecure schemes. <strong>SSH2</strong> fixes a number of security flaws. Documented in RFCs <strong>4250–4254</strong>. Method of choice for remote login and X tunnels.
+    </div>
+
+    <div class="divider must reveal">★ SSH Protocol Stack</div>
+    <div class="stack-diagram reveal" style="max-width:800px">
+      <div class="stack-row">
+        <div class="stack-cell hl">SSH User Authentication Protocol<br><span style="font-size:.7rem;color:var(--muted)">Authenticates client to server</span></div>
+        <div class="stack-cell hl">SSH Connection Protocol<br><span style="font-size:.7rem;color:var(--muted)">Multiplexes tunnel into channels</span></div>
+      </div>
+      <div class="stack-row">
+        <div class="stack-cell gold">SSH Transport Layer Protocol<br><span style="font-size:.7rem;color:var(--muted)">Server auth, confidentiality, integrity (optional compression)</span></div>
+      </div>
+      <div class="stack-row"><div class="stack-cell">TCP — reliable end-to-end delivery</div></div>
+      <div class="stack-row"><div class="stack-cell">IP — datagram delivery</div></div>
+    </div>
+
+    <div class="divider reveal">SSH Transport Layer Protocol</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Server Authentication</div>
+        <h3>Based on host key pairs</h3>
+        <ul>
+          <li>Server authentication occurs at the transport layer, based on server/host key pair(s)</li>
+          <li>Server authentication requires clients to know host keys <strong>in advance</strong></li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Packet Exchange</div>
+        <h3>Handshake flow</h3>
+        <ul>
+          <li>Establish TCP connection</li>
+          <li>Then exchange data:
+            <ul>
+              <li>Identification string exchange</li>
+              <li>Algorithm negotiation</li>
+              <li>Key exchange</li>
+              <li>End of key exchange</li>
+              <li>Service request</li>
+            </ul>
+          </li>
+          <li>Using specified packet format</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider reveal">SSH User Authentication Protocol</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Three Messages</div>
+        <h3>Authenticate client to server</h3>
+        <ul>
+          <li><code>SSH_MSG_USERAUTH_REQUEST</code></li>
+          <li><code>SSH_MSG_USERAUTH_FAILURE</code></li>
+          <li><code>SSH_MSG_USERAUTH_SUCCESS</code></li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Auth Methods</div>
+        <h3>Three options</h3>
+        <ul>
+          <li><strong>Public-key</strong></li>
+          <li><strong>Password</strong></li>
+          <li><strong>Host-based</strong></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider reveal">SSH Connection Protocol</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Overview</div>
+        <h3>Multiplexed channels</h3>
+        <ul>
+          <li>Runs on SSH Transport Layer Protocol</li>
+          <li>Assumes a secure authentication connection</li>
+          <li>Used for multiple logical channels — SSH communications use separate channels</li>
+          <li>Either side can open a channel with unique id number</li>
+          <li>Flow-controlled</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Channel Lifecycle</div>
+        <h3>Three stages &amp; four types</h3>
+        <ul>
+          <li><strong>Stages:</strong> opening a channel → data transfer → closing a channel</li>
+          <li><strong>Types:</strong> session, x11, forwarded-tcpip, direct-tcpip</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider reveal">Connection Protocol Exchange</div>
+    <div class="formula reveal">Establish Authenticated Transport Layer Connection
+      |
+      ├─ SSH_MSG_CHANNEL_OPEN                →
+      ├─ SSH_MSG_CHANNEL_OPEN_CONFIRMATION    ←
+      |
+  Data transfer:
+      ├─ SSH_MSG_CHANNEL_DATA  ↔  SSH_MSG_CHANNEL_DATA  (many)
+      |
+      └─ SSH_MSG_CHANNEL_CLOSE               →</div>
+
+    <div class="divider must reveal">★ Port Forwarding (SSH Tunneling)</div>
+    <div class="cards reveal">
+      <div class="card must">
+        <div class="card-tag gold">Core Idea</div>
+        <h3>Convert insecure TCP → secure SSH</h3>
+        <ul>
+          <li>SSH Transport Layer Protocol establishes a TCP connection between SSH client &amp; server</li>
+          <li>Client traffic redirected to local SSH, travels via tunnel, then remote SSH delivers to server</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Two Types</div>
+        <h3>Local vs Remote</h3>
+        <ul>
+          <li><strong>Local forwarding</strong> — hijacks selected traffic from the local end</li>
+          <li><strong>Remote forwarding</strong> — client acts for server (reverse)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 5 — SET
+═══════════════════════════════════════ -->
+<section class="section" id="s5">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">05</span>
+      <h2 class="section-title must">Secure Electronic Transactions <span>(SET)</span></h2>
+    </div>
+
+    <div class="callout gold reveal">
+      <strong>★ SET</strong> — an open encryption &amp; security specification to <strong>protect Internet credit card transactions</strong>. Developed in <strong>1996 by MasterCard, Visa et al</strong>. Note: SET is <em>not</em> a payment system — rather it is a set of security protocols &amp; formats enabling:
+      <ul style="margin-top:.5rem">
+        <li>Secure communications amongst parties</li>
+        <li>Trust from use of <strong>X.509v3 certificates</strong></li>
+        <li>Privacy by restricting info to those who need it</li>
+      </ul>
+    </div>
+
+    <div class="divider reveal">SET Components</div>
+    <div class="cards reveal">
+      <div class="card"><div class="card-tag">Party 1</div><h3>Cardholder</h3><p>The customer with a certified credit card.</p></div>
+      <div class="card"><div class="card-tag">Party 2</div><h3>Merchant</h3><p>Sells goods/services; has own SET certificate.</p></div>
+      <div class="card"><div class="card-tag">Party 3</div><h3>Issuer</h3><p>Bank that issued the cardholder's credit card.</p></div>
+      <div class="card"><div class="card-tag">Party 4</div><h3>Acquirer</h3><p>Merchant's bank — processes payments.</p></div>
+      <div class="card"><div class="card-tag">Party 5</div><h3>Payment Gateway</h3><p>Bridges merchant and existing bank payment network.</p></div>
+      <div class="card"><div class="card-tag">Party 6</div><h3>Certificate Authority</h3><p>Issues X.509v3 certificates to all parties.</p></div>
+    </div>
+
+    <div class="divider reveal">SET Transaction — 10 Steps</div>
+    <div class="steps reveal">
+      <div class="step"><span class="step-num">01</span><div class="step-body"><h4>Customer opens account</h4><p>At an issuer that supports SET.</p></div></div>
+      <div class="step"><span class="step-num">02</span><div class="step-body"><h4>Customer receives a certificate</h4><p>After identity verification.</p></div></div>
+      <div class="step"><span class="step-num">03</span><div class="step-body"><h4>Merchants have their own certificates</h4><p>One for signing, one for key exchange.</p></div></div>
+      <div class="step"><span class="step-num">04</span><div class="step-body"><h4>Customer places an order</h4></div></div>
+      <div class="step"><span class="step-num">05</span><div class="step-body"><h4>Merchant is verified</h4><p>By checking the merchant's certificate.</p></div></div>
+      <div class="step"><span class="step-num">06</span><div class="step-body"><h4>Order and payment are sent</h4></div></div>
+      <div class="step"><span class="step-num">07</span><div class="step-body"><h4>Merchant requests payment authorization</h4></div></div>
+      <div class="step"><span class="step-num">08</span><div class="step-body"><h4>Merchant confirms order</h4></div></div>
+      <div class="step"><span class="step-num">09</span><div class="step-body"><h4>Merchant provides goods or service</h4></div></div>
+      <div class="step"><span class="step-num">10</span><div class="step-body"><h4>Merchant requests payment</h4><p>Capture from payment gateway.</p></div></div>
+    </div>
+
+    <div class="divider must reveal">★ Dual Signature — The Heart of SET</div>
+    <div class="callout gold reveal">
+      <strong>Customer creates dual messages:</strong>
+      <ul>
+        <li><strong>Order Information (OI)</strong> — for merchant</li>
+        <li><strong>Payment Information (PI)</strong> — for bank</li>
+      </ul>
+      Neither party needs details of the other, <strong>but must know they are linked</strong>. Use a <strong>dual signature</strong> for this — signed concatenated hashes of OI &amp; PI.
+    </div>
+
+    <div class="formula gold reveal">Dual signature construction:
+  POMD = H( H(PI) || H(OI) )
+  DS   = E(PR_c, POMD)          // signed with customer's private key
+
+Merchant receives: PIMD, OI, DS, cert(PU_c)
+  Compute  POMD_m = H( PIMD || H(OI) )
+  Verify   D(PU_c, DS) == POMD_m     ✓  (order not tampered)
+
+Payment gateway receives: PI, OIMD, DS, cert(PU_c)
+  Compute  POMD_b = H( H(PI) || OIMD )
+  Verify   D(PU_c, DS) == POMD_b     ✓  (payment not tampered)</div>
+
+    <div class="divider reveal">Purchase Request — Merchant Processing</div>
+    <div class="steps reveal">
+      <div class="step"><span class="step-num">01</span><div class="step-body"><h4>Verify cardholder certificates</h4><p>Using CA signatures.</p></div></div>
+      <div class="step"><span class="step-num">02</span><div class="step-body"><h4>Verify dual signature</h4><p>Using customer's public signature key — ensures order not tampered with in transit, and was signed with cardholder's private signature key.</p></div></div>
+      <div class="step"><span class="step-num">03</span><div class="step-body"><h4>Process order &amp; forward payment info</h4><p>To the payment gateway for authorization.</p></div></div>
+      <div class="step"><span class="step-num">04</span><div class="step-body"><h4>Send purchase response</h4><p>To the cardholder.</p></div></div>
+    </div>
+
+    <div class="divider reveal">Payment Gateway Authorization — 8 Steps</div>
+    <div class="steps reveal">
+      <div class="step"><span class="step-num">01</span><div class="step-body"><h4>Verify all certificates</h4></div></div>
+      <div class="step"><span class="step-num">02</span><div class="step-body"><h4>Decrypt digital envelope of auth block</h4><p>Obtain symmetric key, then decrypt authorization block.</p></div></div>
+      <div class="step"><span class="step-num">03</span><div class="step-body"><h4>Verify merchant's signature on auth block</h4></div></div>
+      <div class="step"><span class="step-num">04</span><div class="step-body"><h4>Decrypt digital envelope of payment block</h4><p>Obtain symmetric key, decrypt payment block.</p></div></div>
+      <div class="step"><span class="step-num">05</span><div class="step-body"><h4>Verify dual signature on payment block</h4></div></div>
+      <div class="step"><span class="step-num">06</span><div class="step-body"><h4>Verify transaction ID match</h4><p>Between merchant's and customer's PI.</p></div></div>
+      <div class="step"><span class="step-num">07</span><div class="step-body"><h4>Request &amp; receive authorization from issuer</h4></div></div>
+      <div class="step"><span class="step-num">08</span><div class="step-body"><h4>Send authorization response back to merchant</h4></div></div>
+    </div>
+
+    <div class="divider reveal">Payment Capture</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Final Step</div>
+        <h3>Funds transfer</h3>
+        <ul>
+          <li>Merchant sends payment gateway a <strong>payment capture request</strong></li>
+          <li>Gateway checks request</li>
+          <li>Then causes funds to be transferred to merchant's account</li>
+          <li>Notifies merchant using <strong>capture response</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 6 — EMAIL / PGP
+═══════════════════════════════════════ -->
+<section class="section" id="s6">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">06</span>
+      <h2 class="section-title must">Email Security &amp; <span>PGP</span></h2>
+    </div>
+
+    <div class="callout reveal">
+      Email is one of the most widely used and regarded network services, but <strong>currently message contents are not secure</strong> — may be inspected in transit or by privileged users on the destination system.
+    </div>
+
+    <div class="divider reveal">Email Security Enhancements — Four Needs</div>
+    <div class="cards reveal">
+      <div class="card"><div class="card-tag">N1</div><h3>Confidentiality</h3><p>Protection from disclosure.</p></div>
+      <div class="card"><div class="card-tag">N2</div><h3>Authentication</h3><p>Of sender of message.</p></div>
+      <div class="card"><div class="card-tag">N3</div><h3>Message Integrity</h3><p>Protection from modification.</p></div>
+      <div class="card"><div class="card-tag">N4</div><h3>Non-repudiation of origin</h3><p>Protection from denial by sender.</p></div>
+    </div>
+
+    <div class="divider must reveal">★ Pretty Good Privacy (PGP)</div>
+    <div class="callout gold reveal">
+      <strong>PGP</strong> — widely used de facto secure email. Developed by <strong>Phil Zimmermann</strong>. Selected best available crypto algorithms, integrated into a single program. Runs on Unix, PC, Macintosh and other systems. Originally free; now also has commercial versions.
+    </div>
+
+    <div class="divider reveal">PGP Operations</div>
+    <div class="cards two reveal">
+      <div class="card must">
+        <div class="card-tag gold">Authentication</div>
+        <h3>Signed hash with RSA</h3>
+        <ol style="padding-left:1.2rem;color:var(--muted);font-size:.88rem">
+          <li>Sender creates message</li>
+          <li>Make SHA-1 160-bit hash of message</li>
+          <li>Attach RSA-signed hash to message</li>
+          <li>Receiver decrypts &amp; recovers hash code</li>
+          <li>Receiver verifies received message hash</li>
+        </ol>
+      </div>
+      <div class="card must">
+        <div class="card-tag gold">Confidentiality</div>
+        <h3>Session key with RSA envelope</h3>
+        <ol style="padding-left:1.2rem;color:var(--muted);font-size:.88rem">
+          <li>Sender forms 128-bit random session key</li>
+          <li>Encrypts message with session key</li>
+          <li>Attaches session key encrypted with RSA</li>
+          <li>Receiver decrypts &amp; recovers session key</li>
+          <li>Session key is used to decrypt message</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="divider reveal">Confidentiality + Authentication Combined</div>
+    <div class="callout reveal">
+      Can use both services on the same message:
+      <ol style="margin-top:.5rem;margin-left:1.5rem">
+        <li>Create signature &amp; attach to message</li>
+        <li>Encrypt both message &amp; signature</li>
+        <li>Attach RSA/ElGamal-encrypted session key</li>
+      </ol>
+    </div>
+
+    <div class="divider reveal">Compression &amp; Email Compatibility</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Compression</div>
+        <h3>After signing, before encrypting</h3>
+        <ul>
+          <li>By default PGP compresses message <strong>after signing but before encrypting</strong></li>
+          <li>So can store uncompressed message &amp; signature for later verification</li>
+          <li>Also because compression is non-deterministic</li>
+          <li>Uses <strong>ZIP</strong> compression algorithm</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Email Compatibility</div>
+        <h3>Radix-64 encoding</h3>
+        <ul>
+          <li>Encrypted data is binary, but email was designed only for text</li>
+          <li>PGP encodes raw binary data into printable ASCII</li>
+          <li>Uses <strong>radix-64</strong> algorithm — maps 3 bytes to 4 printable chars</li>
+          <li>Also appends a CRC</li>
+          <li>PGP segments messages if too big</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider reveal">PGP Generic Transmission &amp; Reception</div>
+    <div class="formula reveal"><span class="hl">TRANSMISSION (from A):</span>
+  X ← file
+  if signature required:  X ← signature || X
+  X ← Z(X)                            // compress
+  if confidentiality required:
+    X ← E(PU_b, K_s) || E(K_s, X)      // encrypt
+  X ← R64[X]                           // radix-64
+
+<span class="hl2">RECEPTION (to B):</span>
+  X ← R64⁻¹[X]
+  if confidentiality:  decrypt session key, decrypt X
+  X ← Z⁻¹(X)                           // decompress
+  if signature:  strip signature, verify</div>
+
+    <div class="divider reveal">PGP Session Keys</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Per-message Keys</div>
+        <h3>Fresh each time</h3>
+        <ul>
+          <li>Need a session key for each message</li>
+          <li>Varying sizes: 56-bit DES, 128-bit CAST or IDEA, 168-bit Triple-DES</li>
+          <li>Generated using <strong>ANSI X12.17 mode</strong></li>
+          <li>Uses random inputs from previous uses and keystroke timing of user</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Key IDs</div>
+        <h3>Identify which public/private key</h3>
+        <ul>
+          <li>Many public/private keys may be in use — need to identify which was used</li>
+          <li>Sending full public key with every message is inefficient</li>
+          <li>Use a <strong>key identifier</strong> = least significant 64 bits of the key (very likely unique)</li>
+          <li>Also used in signatures</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider must reveal">★ PGP Message Format</div>
+    <div class="formula gold reveal">┌───────────────────┐
+│ Session Key comp  │  [KeyID(PU_b)] [Session Key K_s]            encrypted with E(PU_b, ·)
+├───────────────────┤
+│ Signature         │  [Timestamp] [KeyID(PU_a)] [Leading 2B MD]
+│                   │  [Message Digest]                            signed with E(PR_a, ·)
+├───────────────────┤
+│ Message           │  [Filename] [Timestamp] [Data]
+└───────────────────┘
+   The whole is ZIP-compressed, then encrypted with session key K_s,
+   then radix-64 encoded for transport.</div>
+
+    <div class="divider must reveal">★ PGP Key Rings</div>
+    <div class="cards two reveal">
+      <div class="card must">
+        <div class="card-tag gold">Private Key Ring</div>
+        <h3>Owner's keys</h3>
+        <ul>
+          <li>Contains the public/private key pair(s) for this user</li>
+          <li>Indexed by Key ID</li>
+          <li>Private key is <strong>encrypted under a hashed passphrase</strong></li>
+          <li>Fields: Timestamp, Key ID, Public Key, Encrypted Private Key, User ID</li>
+        </ul>
+      </div>
+      <div class="card must">
+        <div class="card-tag gold">Public Key Ring</div>
+        <h3>All known peers</h3>
+        <ul>
+          <li>Contains public keys of other PGP users known to this user</li>
+          <li>Indexed by Key ID</li>
+          <li>Fields: Timestamp, Key ID, Public Key, Owner Trust, User ID, Key Legitimacy, Signature(s), Signature Trust(s)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout warn reveal">
+      Security of private keys depends entirely on the <strong>passphrase security</strong>.
+    </div>
+
+    <div class="divider must reveal">★ PGP Key Management — Web of Trust</div>
+    <div class="cards reveal">
+      <div class="card must">
+        <div class="card-tag gold">Decentralized Trust</div>
+        <h3>Every user is own CA</h3>
+        <ul>
+          <li>Rather than relying on certificate authorities</li>
+          <li>In PGP every user is their own CA</li>
+          <li>Can sign keys for users they know directly</li>
+          <li>Forms a <strong>"web of trust"</strong></li>
+          <li>Trust keys you have signed</li>
+          <li>Can trust keys others have signed, if there is a chain of signatures to them</li>
+          <li>Key ring includes trust indicators</li>
+          <li>Users can also revoke their keys</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Trust Model Example</div>
+        <h3>Legend</h3>
+        <ul>
+          <li><strong>?</strong> = unknown signatory</li>
+          <li>X → Y = X is signed by Y</li>
+          <li>Filled circle = owner is trusted by you to sign keys</li>
+          <li>Partial fill = partially trusted to sign</li>
+          <li>Dot = key is deemed legitimate by you</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 7 — S/MIME
+═══════════════════════════════════════ -->
+<section class="section" id="s7">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">07</span>
+      <h2 class="section-title must"><span>S/MIME</span></h2>
+    </div>
+
+    <div class="callout gold reveal">
+      <strong>★ S/MIME — Secure/Multipurpose Internet Mail Extensions</strong>. A security enhancement to MIME email.
+      <ul style="margin-top:.5rem">
+        <li>Original Internet RFC822 email was text-only</li>
+        <li>MIME provided support for varying content types and multi-part messages</li>
+        <li>With encoding of binary data to textual form</li>
+        <li>S/MIME added security enhancements</li>
+      </ul>
+      Supported in many mail agents: MS Outlook, Mozilla, Mac Mail, etc.
+    </div>
+
+    <div class="divider reveal">S/MIME Functions — 4 Types</div>
+    <div class="cards reveal">
+      <div class="card"><div class="card-tag">F1</div><h3>Enveloped Data</h3><p>Encrypted content and associated keys.</p></div>
+      <div class="card"><div class="card-tag">F2</div><h3>Signed Data</h3><p>Encoded message + signed digest.</p></div>
+      <div class="card"><div class="card-tag">F3</div><h3>Clear-signed Data</h3><p>Cleartext message + encoded signed digest (readable without S/MIME).</p></div>
+      <div class="card"><div class="card-tag">F4</div><h3>Signed &amp; Enveloped Data</h3><p>Nesting of signed &amp; encrypted entities.</p></div>
+    </div>
+
+    <div class="divider reveal">S/MIME Cryptographic Algorithms</div>
+    <div class="reveal" style="overflow-x:auto">
+      <table class="data-table">
+        <thead><tr><th>Function</th><th>Algorithms</th></tr></thead>
+        <tbody>
+          <tr><td>Digital Signatures</td><td>DSS &amp; RSA</td></tr>
+          <tr><td>Hash Functions</td><td>SHA-1 &amp; MD5</td></tr>
+          <tr><td>Session Key Encryption</td><td>ElGamal &amp; RSA</td></tr>
+          <tr><td>Message Encryption</td><td>AES, Triple-DES, RC2/40 and others</td></tr>
+          <tr><td>MAC</td><td>HMAC with SHA-1</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="divider reveal">S/MIME Messages &amp; Certificate Processing</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Messages</div>
+        <h3>MIME-wrapped PKCS objects</h3>
+        <ul>
+          <li>Secures a MIME entity with a signature, encryption, or both</li>
+          <li>Forms a MIME-wrapped <strong>PKCS object</strong></li>
+          <li>Content-types: enveloped data, signed data, clear-signed data, registration request, certificate-only message</li>
+        </ul>
+      </div>
+      <div class="card must">
+        <div class="card-tag gold">Certificate Processing</div>
+        <h3>Hybrid X.509 + web of trust</h3>
+        <ul>
+          <li>Uses <strong>X.509 v3 certificates</strong></li>
+          <li>Managed using a hybrid of a strict X.509 CA hierarchy &amp; PGP's web of trust</li>
+          <li>Each client has a list of trusted CAs' certs</li>
+          <li>And own public/private key pairs &amp; certs</li>
+          <li>Certificates must be signed by trusted CAs</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider reveal">Verisign Digital ID Classes</div>
+    <div class="reveal" style="overflow-x:auto">
+      <table class="data-table">
+        <thead><tr><th>Class</th><th>Identity Checks</th><th>Usage</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Name / email check</td><td>Web browsing / email</td></tr>
+          <tr><td>2</td><td>+ enrollment / address check</td><td>Email, subscriptions, software validation</td></tr>
+          <tr><td>3</td><td>+ ID documents</td><td>E-banking / service access</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="divider reveal">S/MIME Enhanced Security Services</div>
+    <div class="cards reveal">
+      <div class="card"><div class="card-tag">ESS 1</div><h3>Signed Receipts</h3><p>Proof that a recipient received a signed message.</p></div>
+      <div class="card"><div class="card-tag">ESS 2</div><h3>Security Labels</h3><p>Sensitivity level / classification labels.</p></div>
+      <div class="card"><div class="card-tag">ESS 3</div><h3>Secure Mailing Lists</h3><p>Distribute encrypted mail via a list server.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 8 — DKIM
+═══════════════════════════════════════ -->
+<section class="section" id="s8">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">08</span>
+      <h2 class="section-title">DomainKeys Identified Mail <span>(DKIM)</span></h2>
+    </div>
+
+    <div class="callout reveal">
+      <strong>DKIM</strong> — a specification for <strong>cryptographically signing email messages</strong>, so the signing domain claims responsibility. Recipients / agents can verify the signature. Proposed Internet Standard <strong>RFC 4871</strong>. Has been widely adopted.
+    </div>
+
+    <div class="divider reveal">Internet Mail Architecture</div>
+    <div class="formula reveal">  MUA (author) ──SMTP──► MSA ──SMTP──► MTA ──SMTP──► MTA ──► MDA ──► MS ──► MUA (recipient)
+                                                                        │
+                                                                    (IMAP/POP)
+  MUA = Message User Agent,  MSA = Mail Submission Agent
+  MTA = Message Transfer Agent,  MDA = Mail Delivery Agent,  MS = Message Store</div>
+
+    <div class="divider reveal">Email Threats (RFC 4684)</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Range</div>
+        <h3>Who attacks</h3>
+        <ul>
+          <li>Low-end attackers</li>
+          <li>Spammers</li>
+          <li>Fraudsters</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Capabilities</div>
+        <h3>Attack vectors</h3>
+        <ul>
+          <li>Where submitted</li>
+          <li>Signed messages</li>
+          <li>Volume, routing, naming</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Location</div>
+        <h3>Network position</h3>
+        <ul>
+          <li>Outside-located attackers</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider reveal">DKIM Strategy</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Transparent to User</div>
+        <h3>MSA signs, MDA verifies</h3>
+        <ul>
+          <li><strong>MSA signs</strong> outgoing mail with private key</li>
+          <li><strong>MDA verifies</strong> via DNS lookup of signer's public key</li>
+          <li>For pragmatic reasons: users don't have to manage keys</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Functional Flow</div>
+        <h3>Sign → transit → verify → assess</h3>
+        <ul>
+          <li>RFC 5322 message signed with SDID at originating/relaying ADMD</li>
+          <li>Private key store at the signer</li>
+          <li>Public key store in DNS at the verifier</li>
+          <li>Message signed? → Verify signature → Pass or Fail</li>
+          <li>Check signing practices (reputation, local info)</li>
+          <li>Feed to message filtering engine</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 9 — INTRUDERS & IDS
+═══════════════════════════════════════ -->
+<section class="section" id="s9">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">09</span>
+      <h2 class="section-title must">Intruders &amp; <span>IDS</span></h2>
+    </div>
+
+    <div class="callout reveal">
+      A significant issue for networked systems is hostile or unwanted access — either via network or local. Can identify classes of intruders with <strong>varying levels of competence</strong>.
+    </div>
+
+    <div class="divider must reveal">★ Types of Intruders (Anderson)</div>
+    <div class="cards reveal">
+      <div class="card must">
+        <div class="card-tag gold">Class 1</div>
+        <h3>Masquerader</h3>
+        <p>Not authorized to use the computer. Penetrates a system's access controls to exploit a legitimate user's account. Usually <strong>external</strong>.</p>
+      </div>
+      <div class="card must">
+        <div class="card-tag gold">Class 2</div>
+        <h3>Misfeasor</h3>
+        <p>A <strong>legitimate user</strong> who accesses data/programs/resources not authorized, OR who is authorized but misuses their privileges. Usually <strong>internal</strong>.</p>
+      </div>
+      <div class="card must">
+        <div class="card-tag gold">Class 3</div>
+        <h3>Clandestine User</h3>
+        <p>Seizes <strong>supervisory control</strong> of the system and uses it to evade auditing and access controls, or to suppress audit actions. Either internal or external.</p>
+      </div>
+    </div>
+
+    <div class="divider reveal">What is an Intrusion?</div>
+    <div class="callout gold reveal">
+      Any set of actions that attempt to compromise the <strong>confidentiality, integrity, or availability</strong> of a computer resource.
+    </div>
+
+    <div class="divider reveal">Consequences of Intrusion</div>
+    <div class="cards reveal">
+      <div class="card"><div class="card-tag">Benign end</div><h3>Exploration</h3><p>Many people simply wish to explore the Internet.</p></div>
+      <div class="card"><div class="card-tag">Serious end</div><h3>Damage</h3><ul><li>Read privileged data</li><li>Perform unauthorized modification</li><li>Disrupt system settings</li></ul></div>
+    </div>
+
+    <div class="divider must reveal">★ Intrusion Detection Systems (IDS)</div>
+    <div class="cards reveal">
+      <div class="card must">
+        <div class="card-tag gold">What IDS Does</div>
+        <h3>Detect &amp; respond</h3>
+        <ul>
+          <li>Intrusion detection = process of <strong>identifying and responding</strong> to malicious activity targeted at resources</li>
+          <li>IDS tests/analyses network system traffic/events against a given set of parameters and alerts/captures data when thresholds are met</li>
+          <li>Uses collected information + predefined knowledge-based system to reason about the possibility of an intrusion</li>
+          <li>Provides services to cope with intrusion: alarms, activating programs, etc.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Why IDS?</div>
+        <h3>Firewalls alone are insufficient</h3>
+        <ul>
+          <li>Anti-virus only detects known viruses</li>
+          <li>Passwords can be hacked/stolen</li>
+          <li>Firewalls <strong>DO NOT</strong> recognize attacks and block them — just a fence</li>
+          <li><strong>~80% of financial losses from insider attacks</strong> — beware internal intruders</li>
+          <li>Example: Apr 1999, many sites hacked via a ColdFusion bug, despite firewalls allowing port 80</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider reveal">Functions &amp; Principles of IDS</div>
+    <div class="cards two reveal">
+      <div class="card">
+        <div class="card-tag">Functions</div>
+        <h3>Reactive, not proactive</h3>
+        <ul>
+          <li>Detect attacks as soon as possible and take appropriate action</li>
+          <li>Does not usually take preventive measures when attack is detected</li>
+          <li>Reactive rather than pro-active agent</li>
+          <li>Plays role of <strong>informant</strong> rather than police officer</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Principles</div>
+        <h3>Deployment requirements</h3>
+        <ul>
+          <li>Must run <strong>unattended</strong> for extended periods</li>
+          <li>Must stay active and secure</li>
+          <li>Must recognize unusual activity</li>
+          <li>Must operate without unduly affecting the system</li>
+          <li>Must be configurable</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider reveal">Typical Intrusion Scenario</div>
+    <div class="steps reveal">
+      <div class="step"><span class="step-num">01</span><div class="step-body"><h4>Information Gathering</h4><p>Find as much info as possible: whois lookup, DNS zone transfers, normal browsing.</p></div></div>
+      <div class="step"><span class="step-num">02</span><div class="step-body"><h4>Further Information Gathering</h4><p>Ping sweeps, port scanning, web server vulnerabilities, version probing of applications/services.</p></div></div>
+      <div class="step"><span class="step-num">03</span><div class="step-body"><h4>Attack!</h4><p>Start trying different attacks. Find misconfigured services. Passive or active attack.</p></div></div>
+      <div class="step"><span class="step-num">04</span><div class="step-body"><h4>Successful Intrusion</h4><p>Install own backdoors, delete log files. Replace services with Trojan horses with backdoor passwords; create own user accounts.</p></div></div>
+      <div class="step"><span class="step-num">05</span><div class="step-body"><h4>Fun and Profit</h4><p>Steal confidential information. Use compromised host to launch further attacks. Change website for FUN.</p></div></div>
+    </div>
+
+    <div class="divider reveal">Intrusion Techniques</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Methodology</div>
+        <h3>Four-phase attack</h3>
+        <ul>
+          <li>Target acquisition &amp; information gathering</li>
+          <li>Initial access</li>
+          <li>Privilege escalation</li>
+          <li>Covering tracks</li>
+        </ul>
+        <p style="margin-top:.5rem">Key goal is often to acquire passwords → then exercise access rights of owner.</p>
+      </div>
+      <div class="card">
+        <div class="card-tag">Password Guessing</div>
+        <h3>One of the most common attacks</h3>
+        <ul>
+          <li>Defaults, short passwords, common word searches</li>
+          <li>User info (names, birthday, phone, interests)</li>
+          <li>Exhaustively searching all possible passwords</li>
+          <li>Check by login or against stolen password file</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Password Capture</div>
+        <h3>Another angle</h3>
+        <ul>
+          <li>Watching over shoulder</li>
+          <li>Trojan horse program</li>
+          <li>Monitoring insecure network login (telnet, FTP, web, email)</li>
+          <li>Extracting recorded info after successful login (web history/cache, etc.)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider reveal">Approaches to Intrusion Detection</div>
+    <div class="cards two reveal">
+      <div class="card">
+        <div class="card-tag">Approach 1</div>
+        <h3>Statistical Anomaly Detection</h3>
+        <ul>
+          <li><strong>Threshold detection</strong> — count occurrences of specific event over time; crude &amp; ineffective alone</li>
+          <li><strong>Profile-based</strong> — characterize past behavior of users, detect significant deviations; usually multi-parameter</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Approach 2</div>
+        <h3>Rule-Based Detection</h3>
+        <ul>
+          <li><strong>Rule-based anomaly detection</strong> — analyze historical audit records to auto-generate rules; no prior knowledge of security flaws required</li>
+          <li><strong>Rule-based penetration ID</strong> — uses expert systems technology; rules identify known penetration / weakness patterns</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider reveal">Audit Records &amp; Analysis</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Audit Records</div>
+        <h3>Two kinds</h3>
+        <ul>
+          <li><strong>Native audit records</strong> — part of all common multi-user OS, already present, but may not have info in desired form</li>
+          <li><strong>Detection-specific audit records</strong> — created to collect wanted info, at cost of additional overhead</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Analysis Metrics</div>
+        <h3>What to measure</h3>
+        <ul>
+          <li>Counter, gauge, interval timer, resource use</li>
+          <li>Tests: mean &amp; standard deviation, multivariate, Markov process, time series, operational</li>
+          <li>Key advantage: no prior knowledge used</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider reveal">Base-Rate Fallacy</div>
+    <div class="callout warn reveal">
+      Practically, an IDS needs to detect a substantial percentage of intrusions with <strong>few false alarms</strong>:
+      <ul style="margin-top:.5rem">
+        <li>Too few intrusions detected → false sense of security</li>
+        <li>Too many false alarms → admins ignore / waste time</li>
+      </ul>
+      This is very hard to do. Existing systems do not have a great record.
+    </div>
+
+    <div class="divider reveal">Distributed Intrusion Detection</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Architecture</div>
+        <h3>Agents &amp; central manager</h3>
+        <ul>
+          <li>Traditional focus is single systems — but typically we have networked systems</li>
+          <li>More effective defence: networked IDS working together</li>
+          <li>Issues: varying audit formats, integrity &amp; confidentiality of data, centralized vs decentralized</li>
+          <li>LAN Monitor &amp; host agents report to Central Manager over WAN</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Honeypots</div>
+        <h3>Intrusion Prevention</h3>
+        <ul>
+          <li>Decoy systems to <strong>lure attackers</strong></li>
+          <li>Away from accessing critical systems</li>
+          <li>Collect information on their activities</li>
+          <li>Encourage attacker to stay so admin can respond</li>
+          <li>Filled with fabricated information</li>
+          <li>Instrumented to collect detailed info</li>
+          <li>Single or multiple networked systems</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider reveal">Password Management — Four Strategies</div>
+    <div class="cards reveal">
+      <div class="card"><div class="card-tag">S1</div><h3>Education</h3><p>Policies + good user education; guidelines (&gt;6 chars, mixed case + digits + punct, not dictionary words). Often ignored.</p></div>
+      <div class="card"><div class="card-tag">S2</div><h3>Computer-Generated</h3><p>Let computer create passwords. Random = not memorable → written down (sticky label syndrome). Even pronounceable ones poorly accepted.</p></div>
+      <div class="card"><div class="card-tag">S3</div><h3>Reactive Checking</h3><p>Periodically run password-guessing tools, disable cracked passwords. Resource-intensive; bad passwords are vulnerable until found.</p></div>
+      <div class="card"><div class="card-tag">S4</div><h3>Proactive Checking</h3><p>Most promising: allow user to pick, but system verifies acceptability via rules + dictionary of bad passwords + algorithms.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 10 — MALICIOUS SOFTWARE
+═══════════════════════════════════════ -->
+<section class="section" id="s10">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">10</span>
+      <h2 class="section-title must">Malicious <span>Software</span></h2>
+    </div>
+
+    <div class="divider must reveal">★ Taxonomy of Malicious Programs</div>
+    <div class="formula gold reveal">Malicious programs
+   ├─ <span class="hl2">Needs host program</span>          ├─ <span class="hl3">Independent</span>
+   │     ├─ Trapdoors                  │     ├─ Worm
+   │     ├─ Logic bombs                │     └─ Zombie
+   │     ├─ Trojan horses              │
+   │     └─ <span class="hl">Viruses</span>  ┐                 │
+   │                 ├── <span class="hl">Replicate</span>     │
+   └─ (Viruses and Worms also replicate; Worms and Zombies are independent)</div>
+
+    <div class="divider reveal">The Whole Malware Zoo</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Trapdoor</div>
+        <h3>Secret entry point</h3>
+        <ul>
+          <li>Secret entry point into a program</li>
+          <li>Allows those who know access bypassing usual security</li>
+          <li>Commonly used by developers</li>
+          <li>A threat when left in production programs</li>
+          <li>Very hard to block in OS; requires good s/w development &amp; update</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Logic Bomb</div>
+        <h3>Trigger-activated</h3>
+        <ul>
+          <li>Code embedded in legitimate program</li>
+          <li>Activated when specified conditions met:
+            <ul style="margin-left:.5rem">
+              <li>Presence/absence of some file</li>
+              <li>Particular date/time</li>
+              <li>Particular user</li>
+            </ul>
+          </li>
+          <li>Typically damages system — modify/delete files/disks</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Trojan Horse</div>
+        <h3>Hidden side-effects</h3>
+        <ul>
+          <li>Program with hidden side-effects</li>
+          <li>Usually superficially attractive (game, s/w upgrade, etc.)</li>
+          <li>Performs some additional tasks when run</li>
+          <li>Allows attacker to indirectly gain access they do not have directly</li>
+          <li>Often used to propagate a virus/worm or install a backdoor</li>
+          <li>Or simply to destroy data</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Zombie</div>
+        <h3>Compromised bot</h3>
+        <ul>
+          <li>Program which secretly takes over another networked computer</li>
+          <li>Uses it to indirectly launch attacks</li>
+          <li>Often used to launch <strong>DDoS attacks</strong></li>
+          <li>Exploits known flaws in network systems</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider must reveal">★ Viruses</div>
+    <div class="callout gold reveal">
+      A piece of <strong>self-replicating code</strong> attached to some other code (cf. biological virus). Both propagates itself &amp; carries a payload — code to make copies + code to perform some covert task.
+    </div>
+
+    <div class="divider reveal">Virus Operation — Four Phases</div>
+    <div class="flow reveal">
+      <div class="flow-node active">Dormant</div>
+      <div class="flow-arrow">⟶</div>
+      <div class="flow-node active">Propagation</div>
+      <div class="flow-arrow">⟶</div>
+      <div class="flow-node gold">Triggering</div>
+      <div class="flow-arrow">⟶</div>
+      <div class="flow-node gold">Execution</div>
+    </div>
+    <ul class="reveal" style="margin-top:1rem;color:var(--muted);font-size:.88rem;padding-left:1.2rem">
+      <li><strong style="color:var(--text)">Dormant</strong> — waiting on a trigger event</li>
+      <li><strong style="color:var(--text)">Propagation</strong> — replicating to programs/disks</li>
+      <li><strong style="color:var(--text)">Triggering</strong> — an event triggers the payload</li>
+      <li><strong style="color:var(--text)">Execution</strong> — of the payload</li>
+    </ul>
+    <p class="reveal" style="font-size:.82rem;color:var(--dim);margin-top:.5rem">Details usually machine/OS-specific — exploiting features/weaknesses.</p>
+
+    <div class="divider reveal">Virus Structure — Pseudocode</div>
+    <div class="formula reveal">program V :=
+  {goto main;
+   1234567;
+   subroutine infect-executable := {loop:
+     file := get-random-executable-file;
+     if (first-line-of-file = 1234567) then goto loop
+     else prepend V to file; }
+   subroutine do-damage := {whatever damage is to be done}
+   subroutine trigger-pulled := {return true if some condition holds}
+   main: main-program := {infect-executable;
+                          if trigger-pulled then do-damage;
+                          goto next;}
+   next:
+  }</div>
+
+    <div class="divider reveal">Types of Viruses</div>
+    <div class="cards reveal">
+      <div class="card"><div class="card-tag">T1</div><h3>Parasitic Virus</h3><p>Attaches itself to executable files; traditional form.</p></div>
+      <div class="card"><div class="card-tag">T2</div><h3>Memory-Resident Virus</h3><p>Lodges in main memory; infects running programs.</p></div>
+      <div class="card"><div class="card-tag">T3</div><h3>Boot Sector Virus</h3><p>Infects a master boot record; spreads when the system boots from an infected disk.</p></div>
+      <div class="card"><div class="card-tag">T4</div><h3>Stealth Virus</h3><p>Designed to hide itself from detection by anti-virus software.</p></div>
+      <div class="card"><div class="card-tag">T5</div><h3>Polymorphic Virus</h3><p>Mutates with every infection — signature-based scanners struggle.</p></div>
+      <div class="card must"><div class="card-tag gold">T6</div><h3>Macro Virus</h3><p>Macro code attached to a data file (Word/Excel); platform-independent; major source of new infections; blurs distinction between data and program files.</p></div>
+    </div>
+
+    <div class="divider reveal">Email Virus</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Melissa-style</div>
+        <h3>Spread via email attachments</h3>
+        <ul>
+          <li>Spread using email with attachment containing a macro virus (cf. Melissa)</li>
+          <li>Triggered when user opens attachment</li>
+          <li>Or worse, even when mail viewed using scripting features</li>
+          <li>Usually targeted at Microsoft Outlook &amp; Word/Excel documents</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider must reveal">★ Worms</div>
+    <div class="cards reveal">
+      <div class="card must">
+        <div class="card-tag gold">Definition</div>
+        <h3>Replicating, not infecting</h3>
+        <ul>
+          <li>Replicating but <strong>not</strong> infecting program</li>
+          <li>Typically spreads over a network</li>
+          <li>Morris Internet Worm 1988 → led to creation of CERTs</li>
+          <li>Uses user's distributed privileges or exploits system vulnerabilities</li>
+          <li>Widely used by hackers to create zombie PCs for DoS</li>
+          <li>Major issue: lack of security of permanently connected systems (esp PCs)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Worm Operation</div>
+        <h3>Like viruses, plus propagation</h3>
+        <ul>
+          <li>Dormant</li>
+          <li>Propagation:
+            <ul style="margin-left:.5rem">
+              <li>Search for other systems to infect</li>
+              <li>Establish connection to target remote system</li>
+              <li>Replicate self onto remote system</li>
+            </ul>
+          </li>
+          <li>Triggering</li>
+          <li>Execution</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider reveal">Notable Worms</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">1988</div>
+        <h3>Morris Worm</h3>
+        <ul>
+          <li>Best-known classic worm — Robert Morris, 1988</li>
+          <li>Targeted Unix systems</li>
+          <li>Propagation techniques:
+            <ul style="margin-left:.5rem">
+              <li>Simple password cracking of local pw file</li>
+              <li>Exploit bug in finger daemon</li>
+              <li>Exploit debug trapdoor in sendmail daemon</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">2001 — Code Red</div>
+        <h3>IIS bug exploit</h3>
+        <ul>
+          <li>Exploited bug in MS IIS to penetrate &amp; spread</li>
+          <li>Probes random IPs for systems running IIS</li>
+          <li>Had trigger time for DoS attack</li>
+          <li>2nd wave infected 360,000 servers in 14 hours</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">2001 — Code Red 2</div>
+        <h3>Installed backdoor</h3>
+        <ul>
+          <li>Had backdoor installed to allow remote control</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">2001 — Nimda</div>
+        <h3>Multi-vector</h3>
+        <ul>
+          <li>Used multiple infection mechanisms:
+            <ul style="margin-left:.5rem">
+              <li>Email</li>
+              <li>Shared drives</li>
+              <li>Web client</li>
+              <li>IIS</li>
+              <li>Code Red 2 backdoor</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider reveal">Virus Countermeasures</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Three Lines</div>
+        <h3>Prevention, Detection, Reaction</h3>
+        <ul>
+          <li><strong>Prevention</strong> — block virus infection mechanism</li>
+          <li><strong>Detection</strong> — of viruses in an infected system</li>
+          <li><strong>Reaction</strong> — restoring system to clean state</li>
+        </ul>
+      </div>
+      <div class="card must">
+        <div class="card-tag gold">Anti-Virus Generations</div>
+        <h3>Evolution</h3>
+        <ul>
+          <li><strong>1st gen:</strong> Scanner — virus signature / program length change</li>
+          <li><strong>2nd gen:</strong> Heuristic rules, program checksums</li>
+          <li><strong>3rd gen:</strong> Memory-resident programs identify virus by actions</li>
+          <li><strong>4th gen:</strong> Full packages — scanning, activity traps, access controls</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Advanced</div>
+        <h3>Modern techniques</h3>
+        <ul>
+          <li><strong>Generic decryption</strong> — CPU simulator checks program signature &amp; behavior before running</li>
+          <li><strong>Digital immune system (IBM)</strong> — general-purpose emulation &amp; detection; auto-capture, analyze, create shield, remove</li>
+          <li><strong>Behavior-blocking software</strong> — integrated with host OS; monitors file access, disk format, executable mods, system settings, network access in real-time</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 11 — FIREWALLS
+═══════════════════════════════════════ -->
+<section class="section" id="s11">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">11</span>
+      <h2 class="section-title must"><span>Firewalls</span></h2>
+    </div>
+
+    <div class="callout gold reveal">
+      <strong>★ Firewall = a choke point of control and monitoring.</strong> Interconnects networks with differing trust, imposes restrictions on network services — only <em>authorized</em> traffic is allowed. Audits and controls access; implements alarms for abnormal behaviour. Must itself be <strong>immune to penetration</strong>. Provides <strong>perimeter defence</strong>.
+    </div>
+
+    <div class="divider reveal">Firewall Limitations</div>
+    <div class="callout warn reveal">
+      A firewall <strong>cannot</strong>:
+      <ul style="margin-top:.5rem">
+        <li>Protect from attacks bypassing it (sneaker net, utility modems, trusted orgs, trusted services like SSL/SSH)</li>
+        <li>Protect against internal threats (disgruntled employee)</li>
+        <li>Protect against transfer of all virus-infected programs/files (too many OS &amp; file types)</li>
+      </ul>
+    </div>
+
+    <div class="divider must reveal">★ Firewall Types — Four Kinds</div>
+    <div class="cards two reveal">
+      <div class="card must">
+        <div class="card-tag gold">Type 1</div>
+        <h3>Packet Filter</h3>
+        <ul>
+          <li>Simplest of components — foundation of any firewall system</li>
+          <li>Examines each IP packet (<strong>no context</strong>) and permits or denies according to rules</li>
+          <li>Restricts access to services (ports)</li>
+          <li>Default policies:
+            <ul style="margin-left:.5rem">
+              <li>That not expressly permitted is prohibited (secure default)</li>
+              <li>That not expressly prohibited is permitted (permissive default)</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+      <div class="card must">
+        <div class="card-tag gold">Type 2</div>
+        <h3>Stateful Packet Filter</h3>
+        <ul>
+          <li>Examines each IP packet <strong>in context</strong></li>
+          <li>Keeps track of client-server sessions</li>
+          <li>Checks each packet validly belongs to one</li>
+          <li>Better able to detect bogus packets out of context</li>
+        </ul>
+      </div>
+      <div class="card must">
+        <div class="card-tag gold">Type 3</div>
+        <h3>Application-Level Gateway (Proxy)</h3>
+        <ul>
+          <li>Use an application-specific gateway / proxy</li>
+          <li>Has full access to protocol:
+            <ul style="margin-left:.5rem">
+              <li>User requests service from proxy</li>
+              <li>Proxy validates request as legal</li>
+              <li>Then actions request and returns result to user</li>
+            </ul>
+          </li>
+          <li>Need separate proxies for each service</li>
+          <li>Some services naturally support proxying; others problematic; custom services generally not supported</li>
+        </ul>
+      </div>
+      <div class="card must">
+        <div class="card-tag gold">Type 4</div>
+        <h3>Circuit-Level Gateway</h3>
+        <ul>
+          <li>Relays two TCP connections</li>
+          <li>Imposes security by limiting which connections are allowed</li>
+          <li>Once created, usually relays traffic without examining contents</li>
+          <li>Typically used when trust internal users by allowing general outbound connections</li>
+          <li><strong>SOCKS</strong> commonly used for this</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider reveal">Packet-Filtering Examples</div>
+    <div class="reveal" style="overflow-x:auto">
+      <table class="data-table">
+        <thead><tr><th>Rule</th><th>Action</th><th>Src</th><th>Port</th><th>Dest</th><th>Port</th><th>Flags</th><th>Comment</th></tr></thead>
+        <tbody>
+          <tr><td>A1</td><td>block</td><td>*</td><td>*</td><td>SPIGOT</td><td>*</td><td></td><td>don't trust these people</td></tr>
+          <tr><td>A2</td><td>allow</td><td>OUR-GW</td><td>25</td><td>*</td><td>*</td><td></td><td>connection to our SMTP port</td></tr>
+          <tr><td>B1</td><td>block</td><td>*</td><td>*</td><td>*</td><td>*</td><td></td><td>default deny</td></tr>
+          <tr><td>C1</td><td>allow</td><td>*</td><td>*</td><td>*</td><td>25</td><td></td><td>connection to their SMTP port</td></tr>
+          <tr><td>D1</td><td>allow</td><td>{our hosts}</td><td>*</td><td>*</td><td>25</td><td></td><td>our packets to their SMTP</td></tr>
+          <tr><td>D2</td><td>allow</td><td>*</td><td>25</td><td>*</td><td>*</td><td>ACK</td><td>their replies</td></tr>
+          <tr><td>E1</td><td>allow</td><td>{our hosts}</td><td>*</td><td>*</td><td>*</td><td></td><td>our outgoing calls</td></tr>
+          <tr><td>E2</td><td>allow</td><td>*</td><td>*</td><td>*</td><td>*</td><td>ACK</td><td>replies to our calls</td></tr>
+          <tr><td>E3</td><td>allow</td><td>*</td><td>*</td><td>*</td><td>&gt;1024</td><td></td><td>traffic to non-servers</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="divider reveal">Attacks on Packet Filters</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">A1</div>
+        <h3>IP Address Spoofing</h3>
+        <ul>
+          <li>Fake source address to be trusted</li>
+          <li>Add filters on router to block</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">A2</div>
+        <h3>Source Routing Attacks</h3>
+        <ul>
+          <li>Attacker sets a route other than default</li>
+          <li>Block source-routed packets</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">A3</div>
+        <h3>Tiny Fragment Attacks</h3>
+        <ul>
+          <li>Split header info over several tiny packets</li>
+          <li>Either discard or reassemble before check</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider reveal">Bastion Host</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Definition</div>
+        <h3>Hardened host at perimeter</h3>
+        <ul>
+          <li>Highly secure host system</li>
+          <li>Potentially exposed to "hostile" elements — hence secured to withstand this</li>
+          <li>May support 2 or more net connections</li>
+          <li>May be trusted to enforce trusted separation between network connections</li>
+          <li>Runs circuit / application level gateways</li>
+          <li>Or provides externally accessible services</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider reveal">Firewall Configurations</div>
+    <div class="cards reveal">
+      <div class="card"><div class="card-tag">Config (a)</div><h3>Screened Host — single-homed bastion</h3><p>Packet-filtering router + one bastion host with one NIC. Bastion reachable from the outside, routes inward.</p></div>
+      <div class="card"><div class="card-tag">Config (b)</div><h3>Screened Host — dual-homed bastion</h3><p>Bastion has two NICs — physical separation of external and internal traffic.</p></div>
+      <div class="card"><div class="card-tag">Config (c)</div><h3>Screened-Subnet Firewall</h3><p>Outside router + bastion + inside router forming a <strong>DMZ</strong>. Most secure arrangement.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 12 — ACCESS CONTROL
+═══════════════════════════════════════ -->
+<section class="section" id="s12">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">12</span>
+      <h2 class="section-title">Access <span>Control</span></h2>
+    </div>
+
+    <div class="callout reveal">
+      Given a system has identified a user, determine what resources they can access. The general model is that of an <strong>access matrix</strong>.
+    </div>
+
+    <div class="divider reveal">Access Matrix Model</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Subject</div>
+        <h3>Active entity</h3>
+        <p>User or process that accesses objects.</p>
+      </div>
+      <div class="card">
+        <div class="card-tag">Object</div>
+        <h3>Passive entity</h3>
+        <p>File or resource being accessed.</p>
+      </div>
+      <div class="card">
+        <div class="card-tag">Access Right</div>
+        <h3>What's permitted</h3>
+        <p>Way in which the object can be accessed (read / write / execute / …).</p>
+      </div>
+    </div>
+
+    <div class="divider reveal">Decomposition of the Matrix</div>
+    <div class="cards two reveal">
+      <div class="card">
+        <div class="card-tag">By Column</div>
+        <h3>Access Control Lists (ACLs)</h3>
+        <p>Each object has a list of (subject, rights). Natural for "who can access this file?"</p>
+      </div>
+      <div class="card">
+        <div class="card-tag">By Row</div>
+        <h3>Capability Tickets</h3>
+        <p>Each subject has a list of (object, rights) tokens. Natural for "what can this user do?"</p>
+      </div>
+    </div>
+
+    <div class="divider reveal">Example Access Matrix</div>
+    <div class="reveal" style="overflow-x:auto">
+      <table class="data-table">
+        <thead><tr><th></th><th>Program 1</th><th>…</th><th>Segment A</th><th>Segment B</th></tr></thead>
+        <tbody>
+          <tr><td>Process 1</td><td>Read, Execute</td><td></td><td>Read, Write</td><td></td></tr>
+          <tr><td>Process 2</td><td></td><td></td><td></td><td>Read</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 13 — CASE STUDIES
+═══════════════════════════════════════ -->
+<section class="section" id="s13">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">13</span>
+      <h2 class="section-title">Case <span>Studies</span></h2>
+    </div>
+
+    <div class="divider reveal">Case Study 1 — Secure Inter-branch Payment Transactions</div>
+    <div class="callout reveal">
+      <strong>General Bank of India (GBI)</strong> — ~1200 computerised branches. Electronic Payment System (EPS) with a central server in Mumbai. Branches connect to a local VSAT via dial-up. GBI-Transfer messaging service used for payment instructions. Current security: data is encrypted over a closed network — minimal by modern standards.
+    </div>
+
+    <div class="divider reveal">Current EPS Architecture — Step by Step</div>
+    <div class="steps reveal">
+      <div class="step"><span class="step-num">01</span><div class="step-body"><h4>Payer branch data entry</h4><p>Operator enters transaction through EPS interface.</p></div></div>
+      <div class="step"><span class="step-num">02</span><div class="step-body"><h4>Officer validates</h4><p>Bank Officer checks the validity through EPS.</p></div></div>
+      <div class="step"><span class="step-num">03</span><div class="step-body"><h4>Authorize &amp; store</h4><p>Authorized transaction stored in local Payment Master (PM) database.</p></div></div>
+      <div class="step"><span class="step-num">04</span><div class="step-body"><h4>Encrypt &amp; queue</h4><p>Copy encrypted and stored in OUT directory.</p></div></div>
+      <div class="step"><span class="step-num">05</span><div class="step-body"><h4>GBI-Transfer poll</h4><p>GBI-Transfer polls OUT directory; dials local VSAT; sends files to EPS central office Mumbai.</p></div></div>
+      <div class="step"><span class="step-num">06</span><div class="step-body"><h4>Transit via VSAT</h4><p>Stored in IN directory at EPS central office.</p></div></div>
+      <div class="step"><span class="step-num">07</span><div class="step-body"><h4>Interface posts to PM</h4><p>EPS central office interface picks file, sends to PM for processing.</p></div></div>
+      <div class="step"><span class="step-num">08</span><div class="step-body"><h4>Credit request to payee branch</h4><p>Headers changed; encrypted transaction placed in OUT directory; sent via GBI-Transfer.</p></div></div>
+      <div class="step"><span class="step-num">09</span><div class="step-body"><h4>Payee branch posts credit</h4><p>PM marks credit, returns acknowledgement.</p></div></div>
+      <div class="step"><span class="step-num">10</span><div class="step-body"><h4>Ack returned to payer</h4><p>Via EPS central office; transaction complete.</p></div></div>
+    </div>
+
+    <div class="divider reveal">Required Security Enhancements</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Enh 1</div>
+        <h3>Non-repudiation</h3>
+        <p>Digital signatures on every transaction.</p>
+      </div>
+      <div class="card">
+        <div class="card-tag">Enh 2</div>
+        <h3>128-bit Encryption</h3>
+        <p>Upgrade from current 56-bit encryption.</p>
+      </div>
+      <div class="card">
+        <div class="card-tag">Enh 3</div>
+        <h3>Smart-card Support</h3>
+        <p>Storing sensitive data; on-card digital signing.</p>
+      </div>
+      <div class="card">
+        <div class="card-tag">Enh 4</div>
+        <h3>Closed-loop PKI</h3>
+        <p>Internal CA &amp; certificate infrastructure.</p>
+      </div>
+    </div>
+
+    <div class="callout green reveal">
+      <strong>Proposed solution:</strong> Transactions digitally signed and encrypted/decrypted at Payer, Payee, and EPS central office. Signing on the workstation or external smart card. Server side supports automated signing without manual intervention. The flow splits into <strong>Payer Leg</strong> (Payer → EPS) and <strong>Payee Leg</strong> (EPS → Payee).
+    </div>
+
+    <div class="divider reveal">Case Study 2 — Cross-Site Scripting Vulnerability (CSSV)</div>
+    <div class="callout warn reveal">
+      <strong>CSSV (XSS)</strong> — a relatively new form of attack exploiting inadequate server-side validation. Attacker's target is <em>not</em> the website, but rather its users (clients/browsers). Happens when malicious tags/scripts attack a Web browser via another site's dynamically generated pages.
+    </div>
+
+    <div class="formula reveal">Example:  www.test.com/address.asp  expects user's postal address.
+User enters:    <span class="hl5">&lt;SCRIPT&gt;Hello World&lt;/SCRIPT&gt;</span>
+
+Submitted URL:
+   www.test.com/address.asp?address=<span class="hl5">&lt;SCRIPT&gt;Hello World&lt;/SCRIPT&gt;</span>
+
+If address.asp echoes the input back into the next Web page
+<span class="hl">without validation</span>, the next page treats the input as
+script and executes it in the victim's browser.
+→ User would see "Hello World" — or far worse in a real attack.</div>
+
+    <div class="divider reveal">Case Study 3 — Virtual Elections</div>
+    <div class="callout reveal">
+      Computerized voting must protect <strong>individual privacy</strong> AND <strong>disallow cheating</strong>. Simple protocols fail.
+    </div>
+
+    <div class="cards two reveal">
+      <div class="card">
+        <div class="card-tag">Naive Protocol</div>
+        <h3>Broken</h3>
+        <ol style="padding-left:1.2rem;color:var(--muted);font-size:.88rem">
+          <li>Each voter casts vote, encrypts with EA's public key</li>
+          <li>Voter sends encrypted vote to EA</li>
+          <li>EA decrypts, tabulates, announces result</li>
+        </ol>
+        <div class="callout warn" style="margin-top:.75rem">
+          <strong>Problems:</strong> EA doesn't know if votes are from authorized voters or bogus; no mechanism to prevent duplicate voting.
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-tag">Better Protocol</div>
+        <h3>Still imperfect</h3>
+        <ol style="padding-left:1.2rem;color:var(--muted);font-size:.88rem">
+          <li>Voter casts vote, signs with <strong>private key</strong></li>
+          <li>Voter encrypts signed vote with EA's public key</li>
+          <li>Voter sends to EA</li>
+          <li>EA decrypts, verifies signature with voter's public key</li>
+          <li>EA tabulates and announces result</li>
+        </ol>
+        <div class="callout warn" style="margin-top:.75rem">
+          <strong>Remaining issue:</strong> EA learns who voted for whom → privacy violation. Needs blind signatures / mix-nets / secret splitting to solve fully.
+        </div>
+      </div>
+    </div>
+
+    <div class="divider reveal">Secret Splitting (Background)</div>
+    <div class="formula reveal">Original secret:   P
+Random number:     R
+Combined secret:   S = P ⊕ R
+
+Alice gets only S,  Bob gets only R.
+Either alone is useless.
+
+They must come together, combining their shares:
+   P = S ⊕ R
+
+→ Foundation of secure multi-party protocols,
+  threshold cryptography, and anonymity systems.</div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer style="padding:3rem 6vw;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem">
+  <div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--muted)">Unit V — Security in Networks</div>
+    <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--dim);margin-top:.25rem;letter-spacing:.1em">SSL/TLS → HTTPS → SSH → SET → PGP → S/MIME → DKIM → IDS → MALWARE → FIREWALLS</div>
+  </div>
+  <div class="unit-nav" style="margin:0">
+    <a href="unit4.html">← Unit IV</a>
+    <a href="index.html">Unit III →</a>
+  </div>
+</footer>
+
+<script>
+  const reveals = document.querySelectorAll('.reveal');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach((e) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), 60);
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.08 });
+  reveals.forEach(r => obs.observe(r));
+
+  const dots = document.querySelectorAll('.float-dot');
+  const sectionIds = ['hero','s1','s2','s3','s4','s5','s6','s7','s8','s9','s10','s11','s12','s13'];
+  const sections = sectionIds.map(id => document.getElementById(id));
+
+  dots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      const target = document.getElementById(dot.dataset.target);
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+
+  window.addEventListener('scroll', () => {
+    const scrollY = window.scrollY + window.innerHeight / 2;
+    let active = 0;
+    sections.forEach((s, i) => {
+      if (s && s.offsetTop <= scrollY) active = i;
+    });
+    dots.forEach((d, i) => d.classList.toggle('active', i === active));
+  }, { passive: true });
+</script>
+</body>
+</html>

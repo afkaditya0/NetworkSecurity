@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unit IV — Message Authentication, Digital Signatures & Key Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0f;
+    --surface: #13131a;
+    --card: #18181f;
+    --border: rgba(255,255,255,0.07);
+    --accent: #c8a96e;
+    --accent2: #7eb8c9;
+    --accent3: #a98ae0;
+    --accent4: #7ec99a;
+    --accent5: #c97e7e;
+    --text: #e8e6df;
+    --muted: #8a8882;
+    --dim: #4a4845;
+    --code-bg: #0a0a0e;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Outfit',sans-serif;
+    font-weight:300;
+    line-height:1.7;
+    overflow-x:hidden;
+  }
+
+  body::before{
+    content:'';
+    position:fixed;inset:0;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events:none;z-index:999;opacity:.4;
+  }
+
+  .hero{
+    min-height:100vh;
+    display:flex;flex-direction:column;justify-content:center;
+    padding:4rem 6vw;
+    position:relative;
+    border-bottom:1px solid var(--border);
+  }
+  .hero::after{
+    content:'';
+    position:absolute;top:0;right:0;
+    width:55%;height:100%;
+    background:radial-gradient(ellipse at 80% 40%, rgba(126,184,201,0.06) 0%, transparent 60%),
+               radial-gradient(ellipse at 95% 80%, rgba(169,138,224,0.05) 0%, transparent 50%);
+    pointer-events:none;
+  }
+  .hero-label{
+    font-family:'DM Mono',monospace;
+    font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--accent2);margin-bottom:1.5rem;
+    display:flex;align-items:center;gap:.75rem;
+  }
+  .hero-label::before{content:'';display:block;width:2rem;height:1px;background:var(--accent2);}
+  .hero h1{
+    font-family:'Cormorant Garamond',serif;
+    font-size:clamp(3.5rem,8vw,7rem);
+    font-weight:300;line-height:1.05;
+    letter-spacing:-.02em;
+    max-width:900px;
+  }
+  .hero h1 em{font-style:italic;color:var(--accent2);}
+  .hero-sub{
+    margin-top:2rem;
+    font-size:.95rem;color:var(--muted);
+    max-width:560px;font-weight:300;
+  }
+  .toc-grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+    gap:.5rem;margin-top:3rem;max-width:1000px;
+  }
+  .toc-item{
+    padding:.75rem 1rem;
+    border:1px solid var(--border);
+    border-radius:4px;
+    font-size:.8rem;
+    color:var(--muted);
+    cursor:pointer;
+    transition:all .2s;
+    text-decoration:none;
+    display:flex;align-items:center;gap:.5rem;
+  }
+  .toc-item:hover{
+    border-color:var(--accent2);color:var(--accent2);
+    background:rgba(126,184,201,0.04);
+  }
+  .toc-item .dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0;}
+  .toc-item.must::after{
+    content:'★';color:var(--accent);font-size:.7rem;margin-left:auto;
+  }
+
+  .unit-nav{
+    display:flex;gap:.5rem;margin-bottom:2.5rem;
+  }
+  .unit-nav a{
+    font-family:'DM Mono',monospace;
+    font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;
+    padding:.4rem .9rem;
+    border:1px solid var(--border);
+    text-decoration:none;color:var(--muted);
+    border-radius:3px;transition:all .2s;
+  }
+  .unit-nav a:hover{border-color:var(--accent);color:var(--accent);}
+  .unit-nav a.current{border-color:var(--accent2);color:var(--accent2);background:rgba(126,184,201,0.06);}
+
+  .container{max-width:1200px;margin:0 auto;padding:0 6vw;}
+  .section{padding:5rem 0;border-bottom:1px solid var(--border);}
+  .section-header{display:flex;align-items:baseline;gap:1.5rem;margin-bottom:3rem;}
+  .section-num{
+    font-family:'DM Mono',monospace;
+    font-size:.65rem;color:var(--dim);letter-spacing:.1em;flex-shrink:0;
+  }
+  .section-title{
+    font-family:'Cormorant Garamond',serif;
+    font-size:clamp(1.8rem,3.5vw,2.8rem);
+    font-weight:400;letter-spacing:-.01em;
+  }
+  .section-title span{color:var(--accent2);}
+  .section-title.must::after{
+    content:' ★';color:var(--accent);font-size:.6em;vertical-align:super;
+  }
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1px;background:var(--border);}
+  .cards.two{grid-template-columns:repeat(auto-fill,minmax(380px,1fr));}
+  .card{background:var(--card);padding:1.75rem;transition:background .2s;}
+  .card:hover{background:rgba(30,30,40,0.9);}
+  .card.must{border-top:2px solid var(--accent);}
+  .card-tag{
+    font-family:'DM Mono',monospace;
+    font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--accent2);margin-bottom:.75rem;
+  }
+  .card-tag.gold{color:var(--accent);}
+  .card h3{
+    font-family:'Cormorant Garamond',serif;
+    font-size:1.3rem;font-weight:500;margin-bottom:.75rem;
+  }
+  .card p,ul{font-size:.88rem;color:var(--muted);line-height:1.8;}
+  .card ul{list-style:none;padding:0;}
+  .card ul li{padding:.15rem 0;}
+  .card ul li::before{content:'→ ';color:var(--accent2);font-size:.75rem;}
+
+  .axiom-list{display:flex;flex-direction:column;gap:.5rem;}
+  .axiom{
+    display:flex;gap:1rem;align-items:flex-start;
+    padding:.75rem 1rem;
+    border-left:2px solid var(--dim);
+    background:var(--surface);
+    font-size:.87rem;color:var(--muted);
+    transition:border-color .2s;
+  }
+  .axiom:hover{border-color:var(--accent2);}
+  .axiom-id{
+    font-family:'DM Mono',monospace;
+    font-size:.7rem;color:var(--accent2);
+    flex-shrink:0;margin-top:.1rem;
+  }
+
+  .formula{
+    background:var(--code-bg);
+    border:1px solid var(--border);
+    border-left:3px solid var(--accent2);
+    padding:1rem 1.25rem;
+    font-family:'DM Mono',monospace;
+    font-size:.82rem;color:#ccc;
+    overflow-x:auto;margin:.75rem 0;
+    line-height:1.9;
+    border-radius:0 4px 4px 0;
+    white-space:pre-wrap;
+  }
+  .formula.gold{border-left-color:var(--accent);}
+  .formula .hl{color:var(--accent);}
+  .formula .hl2{color:var(--accent2);}
+  .formula .hl3{color:var(--accent3);}
+  .formula .hl4{color:var(--accent4);}
+
+  .flow{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin:1.5rem 0;}
+  .flow-node{
+    padding:.5rem 1.25rem;
+    border:1px solid var(--border);
+    border-radius:2px;
+    font-size:.83rem;
+    background:var(--surface);
+    color:var(--text);
+  }
+  .flow-node.active{
+    border-color:var(--accent2);color:var(--accent2);
+    background:rgba(126,184,201,0.06);
+  }
+  .flow-node.gold{
+    border-color:var(--accent);color:var(--accent);
+    background:rgba(200,169,110,0.06);
+  }
+  .flow-arrow{color:var(--dim);font-size:.8rem;}
+
+  .data-table{width:100%;border-collapse:collapse;font-size:.82rem;}
+  .data-table th{
+    text-align:left;padding:.6rem 1rem;
+    background:var(--surface);
+    font-family:'DM Mono',monospace;
+    font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--accent2);border-bottom:1px solid var(--border);
+  }
+  .data-table td{
+    padding:.6rem 1rem;
+    border-bottom:1px solid rgba(255,255,255,0.04);
+    color:var(--muted);vertical-align:middle;
+  }
+  .data-table tr:hover td{background:rgba(255,255,255,0.02);}
+  .data-table td:first-child{color:var(--text);}
+
+  .steps{display:flex;flex-direction:column;gap:0;}
+  .step{display:flex;gap:1.5rem;padding:1rem 0;border-bottom:1px solid var(--border);}
+  .step:last-child{border-bottom:none;}
+  .step-num{
+    font-family:'DM Mono',monospace;
+    font-size:1.8rem;font-weight:300;color:var(--dim);
+    flex-shrink:0;min-width:2.5rem;line-height:1.2;
+  }
+  .step-body h4{font-size:.9rem;font-weight:500;margin-bottom:.2rem;color:var(--text);}
+  .step-body p{font-size:.83rem;color:var(--muted);}
+
+  .badge{
+    display:inline-block;padding:.15rem .6rem;
+    background:rgba(200,169,110,0.1);
+    border:1px solid rgba(200,169,110,0.25);
+    border-radius:2px;font-size:.7rem;color:var(--accent);
+    font-family:'DM Mono',monospace;letter-spacing:.06em;
+  }
+  .badge.blue{background:rgba(126,184,201,0.1);border-color:rgba(126,184,201,0.25);color:var(--accent2);}
+  .badge.purple{background:rgba(169,138,224,0.1);border-color:rgba(169,138,224,0.25);color:var(--accent3);}
+  .badge.green{background:rgba(126,201,154,0.1);border-color:rgba(126,201,154,0.25);color:var(--accent4);}
+  .badge.red{background:rgba(201,126,126,0.1);border-color:rgba(201,126,126,0.25);color:var(--accent5);}
+  .badge.must{background:rgba(200,169,110,0.18);border-color:rgba(200,169,110,0.45);color:var(--accent);}
+
+  .callout{
+    padding:1rem 1.25rem;
+    border-left:3px solid var(--accent2);
+    background:rgba(126,184,201,0.04);
+    font-size:.86rem;color:var(--muted);
+    margin:.75rem 0;
+  }
+  .callout.warn{border-color:var(--accent5);background:rgba(201,126,126,0.04);}
+  .callout.green{border-color:var(--accent4);background:rgba(126,201,154,0.04);}
+  .callout.gold{border-color:var(--accent);background:rgba(200,169,110,0.05);}
+  .callout strong{color:var(--text);}
+
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);}
+  .compare-col{background:var(--card);padding:1.5rem;}
+  .compare-col h4{
+    font-family:'Cormorant Garamond',serif;
+    font-size:1.1rem;margin-bottom:1rem;
+    padding-bottom:.5rem;border-bottom:1px solid var(--border);
+  }
+
+  .divider{
+    display:flex;align-items:center;gap:1rem;
+    margin:2.5rem 0;color:var(--dim);font-size:.7rem;
+    font-family:'DM Mono',monospace;letter-spacing:.1em;text-transform:uppercase;
+  }
+  .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+  .divider.must{color:var(--accent);}
+  .divider.must::before,.divider.must::after{background:linear-gradient(90deg, transparent, rgba(200,169,110,0.4), transparent);}
+
+  .reveal{opacity:0;transform:translateY(16px);transition:opacity .55s ease,transform .55s ease;}
+  .reveal.visible{opacity:1;transform:translateY(0);}
+
+  .float-nav{
+    position:fixed;top:50%;right:1.5rem;
+    transform:translateY(-50%);
+    display:flex;flex-direction:column;gap:.5rem;
+    z-index:100;
+  }
+  .float-dot{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--dim);
+    cursor:pointer;transition:all .2s;
+  }
+  .float-dot:hover,.float-dot.active{background:var(--accent2);transform:scale(1.4);}
+
+  @media(max-width:768px){
+    .float-nav{display:none;}
+    .compare{grid-template-columns:1fr;}
+    .cards.two{grid-template-columns:1fr;}
+    .hero{padding:3rem 5vw;}
+  }
+</style>
+</head>
+<body>
+
+<nav class="float-nav" id="floatNav">
+  <div class="float-dot" data-target="hero" title="Top"></div>
+  <div class="float-dot" data-target="s1" title="Message Authentication"></div>
+  <div class="float-dot" data-target="s2" title="MAC"></div>
+  <div class="float-dot" data-target="s3" title="HMAC"></div>
+  <div class="float-dot" data-target="s4" title="CMAC & DAA"></div>
+  <div class="float-dot" data-target="s5" title="Authenticated Encryption"></div>
+  <div class="float-dot" data-target="s6" title="PRNG"></div>
+  <div class="float-dot" data-target="s7" title="Digital Signatures"></div>
+  <div class="float-dot" data-target="s8" title="ElGamal & Schnorr"></div>
+  <div class="float-dot" data-target="s9" title="DSS / DSA"></div>
+  <div class="float-dot" data-target="s10" title="Kerberos"></div>
+  <div class="float-dot" data-target="s11" title="X.509"></div>
+  <div class="float-dot" data-target="s12" title="PKI"></div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="container">
+    <div class="unit-nav">
+      <a href="index.html">Unit III</a>
+      <a href="unit4.html" class="current">Unit IV</a>
+      <a href="unit5.html">Unit V</a>
+    </div>
+    <div class="hero-label">Network Security & Cryptography</div>
+    <h1>Unit <em>IV</em><br>Authentication &amp;<br>Key Management</h1>
+    <p class="hero-sub">Message authentication, MACs, HMAC, authenticated encryption, digital signatures (ElGamal, Schnorr, DSS/DSA), Kerberos, X.509 certificates and PKI infrastructure. Star (★) marks topics that cannot be skipped.</p>
+    <nav class="toc-grid">
+      <a href="#s1" class="toc-item"><span class="dot"></span>Message Authentication</a>
+      <a href="#s2" class="toc-item must"><span class="dot"></span>MAC — Properties & Security</a>
+      <a href="#s3" class="toc-item must"><span class="dot"></span>HMAC</a>
+      <a href="#s4" class="toc-item"><span class="dot"></span>DAA &amp; CMAC</a>
+      <a href="#s5" class="toc-item"><span class="dot"></span>Authenticated Encryption (CCM/GCM)</a>
+      <a href="#s6" class="toc-item"><span class="dot"></span>PRNG (Hash &amp; MAC)</a>
+      <a href="#s7" class="toc-item must"><span class="dot"></span>Digital Signatures</a>
+      <a href="#s8" class="toc-item must"><span class="dot"></span>ElGamal &amp; Schnorr Signatures</a>
+      <a href="#s9" class="toc-item must"><span class="dot"></span>DSS / DSA</a>
+      <a href="#s10" class="toc-item must"><span class="dot"></span>Kerberos v4 &amp; v5</a>
+      <a href="#s11" class="toc-item must"><span class="dot"></span>X.509 Certificates</a>
+      <a href="#s12" class="toc-item"><span class="dot"></span>PKI / PKIX</a>
+    </nav>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 1 — MESSAGE AUTHENTICATION
+═══════════════════════════════════════ -->
+<section class="section" id="s1">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">01</span>
+      <h2 class="section-title">Message <span>Authentication</span></h2>
+    </div>
+
+    <div class="callout reveal">
+      <strong>Message Authentication</strong> is concerned with: protecting the <em>integrity</em> of a message, validating <em>identity of originator</em>, and <em>non-repudiation of origin</em> (dispute resolution).
+    </div>
+
+    <div class="divider reveal">Three Alternative Functions</div>
+    <div class="flow reveal">
+      <div class="flow-node active">Hash Function</div>
+      <div class="flow-arrow">⟶</div>
+      <div class="flow-node active">Message Encryption</div>
+      <div class="flow-arrow">⟶</div>
+      <div class="flow-node active">Message Authentication Code (MAC)</div>
+    </div>
+
+    <div class="divider reveal">Message Security Requirements</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Passive Threats</div>
+        <h3>What attackers observe</h3>
+        <ul>
+          <li><strong style="color:var(--text)">Disclosure</strong> — release of message contents</li>
+          <li><strong style="color:var(--text)">Traffic analysis</strong> — patterns of communication</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Active Threats</div>
+        <h3>What attackers do</h3>
+        <ul>
+          <li><strong style="color:var(--text)">Masquerade</strong> — fake source identity</li>
+          <li><strong style="color:var(--text)">Content modification</strong></li>
+          <li><strong style="color:var(--text)">Sequence modification</strong></li>
+          <li><strong style="color:var(--text)">Timing modification</strong> — replay/delay</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Repudiation</div>
+        <h3>Denials</h3>
+        <ul>
+          <li><strong style="color:var(--text)">Source repudiation</strong> — sender denies sending</li>
+          <li><strong style="color:var(--text)">Destination repudiation</strong> — receiver denies receiving</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider reveal">Encryption-Based Authentication</div>
+    <div class="compare reveal">
+      <div class="compare-col">
+        <h4 style="color:var(--accent)">Symmetric Encryption</h4>
+        <ul class="card" style="padding:0;background:transparent">
+          <li>Receiver knows sender must have created it</li>
+          <li>Only sender and receiver know the key</li>
+          <li>Need suitable structure / redundancy / checksum to detect changes</li>
+        </ul>
+      </div>
+      <div class="compare-col">
+        <h4 style="color:var(--accent2)">Public-Key Encryption</h4>
+        <ul class="card" style="padding:0;background:transparent">
+          <li>Encryption alone gives <strong>no</strong> sender confidence (public key is, well, public)</li>
+          <li>Sender signs with private key, then encrypts with recipient's public key → secrecy + authentication</li>
+          <li>Costs <strong>two</strong> public-key uses per message</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 2 — MAC
+═══════════════════════════════════════ -->
+<section class="section" id="s2">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">02</span>
+      <h2 class="section-title must">Message Authentication <span>Code (MAC)</span></h2>
+    </div>
+
+    <div class="callout gold reveal">
+      <strong>★ Definition:</strong> A small fixed-sized block generated from message + secret key.
+      <div class="formula" style="margin-top:.5rem;border-left-color:var(--accent)">MAC = C(K, M)</div>
+      Appended to message; receiver re-computes and compares. Provides assurance that the message is unaltered and comes from the sender. <strong>A MAC is NOT a digital signature</strong> — it provides authentication but not non-repudiation.
+    </div>
+
+    <div class="divider reveal">Properties</div>
+    <div class="cards reveal">
+      <div class="card must">
+        <div class="card-tag gold">Cryptographic Checksum</div>
+        <h3>MAC = C<sub>K</sub>(M)</h3>
+        <ul>
+          <li>Condenses a variable-length message M</li>
+          <li>Using a secret key K</li>
+          <li>To a fixed-sized authenticator</li>
+          <li>Many-to-one function (collisions exist but must be hard to find)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Why MAC?</div>
+        <h3>Use cases</h3>
+        <ul>
+          <li>Sometimes only authentication is needed — no secrecy</li>
+          <li>Authentication may need to persist longer than encryption (e.g., archival)</li>
+          <li>Generally MAC is computed <em>before</em> encryption when both used</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Need not be reversible</div>
+        <h3>Like encryption, but…</h3>
+        <ul>
+          <li>Computation depends on both message and key</li>
+          <li>Unlike encryption, MAC need not be reversible</li>
+          <li>Generally use separate keys for encryption vs. MAC</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider reveal">Requirements for MACs</div>
+    <div class="axiom-list reveal">
+      <div class="axiom"><span class="axiom-id">R1</span><span><strong style="color:var(--text)">Forgery resistance</strong> — knowing a message and its MAC, infeasible to find another message with the same MAC</span></div>
+      <div class="axiom"><span class="axiom-id">R2</span><span><strong style="color:var(--text)">Uniform distribution</strong> — MACs should be uniformly distributed</span></div>
+      <div class="axiom"><span class="axiom-id">R3</span><span><strong style="color:var(--text)">All-bit dependence</strong> — MAC should depend equally on all bits of the message</span></div>
+    </div>
+
+    <div class="divider reveal">Security of MACs</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Brute Force</div>
+        <h3>Two attack surfaces</h3>
+        <ul>
+          <li>Strong collision resistance hash has cost <strong>2<sup>m/2</sup></strong></li>
+          <li>128-bit hash looks vulnerable, 160-bit better</li>
+          <li>Can attack the keyspace (cf. key search) or the MAC</li>
+          <li>At least <strong>128-bit MAC</strong> is needed for security</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Cryptanalysis</div>
+        <h3>Structural attacks</h3>
+        <ul>
+          <li>Like block ciphers, want brute force to be the best alternative</li>
+          <li>More variety of MACs → harder to generalize</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 3 — HMAC
+═══════════════════════════════════════ -->
+<section class="section" id="s3">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">03</span>
+      <h2 class="section-title must">Keyed Hash Functions — <span>HMAC</span></h2>
+    </div>
+
+    <div class="callout gold reveal">
+      <strong>★ HMAC</strong> is the dominant MAC construction — Internet standard <strong>RFC 2104</strong>. It builds a MAC from any cryptographic hash function (MD5, SHA-1, RIPEMD-160, Whirlpool, …). Used in IPsec, TLS, SSH and many other protocols.
+    </div>
+
+    <div class="divider reveal">Why Keyed Hashes?</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Motivation</div>
+        <h3>Hash-based MAC</h3>
+        <ul>
+          <li>Hash functions are generally faster than block ciphers</li>
+          <li>Crypto hash function code is widely available</li>
+          <li>Original naive proposal: <code>KeyedHash = Hash(Key | Message)</code></li>
+          <li>Some weaknesses found → led to HMAC</li>
+        </ul>
+      </div>
+      <div class="card must">
+        <div class="card-tag gold">Length-Extension Attack</div>
+        <h3>Why naive Hash(K|M) fails</h3>
+        <div class="formula">M = Key | Message | Padding
+M = M₁ M₂ … M_L  (each block = blocksize)
+Hash = H(H(…H(H(IV,M₁),M₂)…),M_L)
+
+But attacker can append extra block M_{L+1}:
+<span class="hl">Hash' = H(Hash, M_{L+1})</span>
+without knowing the key!</div>
+      </div>
+    </div>
+
+    <div class="divider must reveal">★ HMAC Design Objectives</div>
+    <div class="axiom-list reveal">
+      <div class="axiom"><span class="axiom-id">D1</span><span>Use, <strong style="color:var(--text)">without modifications</strong>, existing hash functions</span></div>
+      <div class="axiom"><span class="axiom-id">D2</span><span>Allow easy <strong style="color:var(--text)">replaceability</strong> of the embedded hash function</span></div>
+      <div class="axiom"><span class="axiom-id">D3</span><span>Preserve <strong style="color:var(--text)">original performance</strong> of hash function without significant degradation</span></div>
+      <div class="axiom"><span class="axiom-id">D4</span><span>Use and handle keys in a <strong style="color:var(--text)">simple way</strong></span></div>
+      <div class="axiom"><span class="axiom-id">D5</span><span>Have well understood <strong style="color:var(--text)">cryptographic analysis</strong> of authentication strength</span></div>
+    </div>
+
+    <div class="divider must reveal">★ HMAC Construction</div>
+    <div class="formula gold reveal"><span class="hl">HMAC_K(M)</span> = Hash[ (K⁺ ⊕ <span class="hl2">opad</span>) || Hash[ (K⁺ ⊕ <span class="hl2">ipad</span>) || M ] ]
+
+where:
+  K⁺   = key padded out to block size
+  ipad = 0x36 repeated (inner pad)
+  opad = 0x5C repeated (outer pad)
+
+Overhead: just 3 extra hash block calculations
+beyond what the message itself needs.</div>
+
+    <div class="divider reveal">HMAC Security</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Provable Security</div>
+        <h3>Tied to underlying hash</h3>
+        <ul>
+          <li>Proved security of HMAC relates to that of the underlying hash algorithm</li>
+          <li>Attacking HMAC requires either:
+            <ul style="margin-left:.5rem">
+              <li>Brute-force on the key, OR</li>
+              <li>Birthday attack — but since keyed, attacker would need a very large number of messages</li>
+            </ul>
+          </li>
+          <li>Choose hash based on speed vs. security tradeoff</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 4 — DAA & CMAC
+═══════════════════════════════════════ -->
+<section class="section" id="s4">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">04</span>
+      <h2 class="section-title">Symmetric Cipher MACs — <span>DAA &amp; CMAC</span></h2>
+    </div>
+
+    <div class="callout reveal">
+      Any block cipher chaining mode can be used: encrypt the message and use the final block as a MAC.
+    </div>
+
+    <div class="divider reveal">Data Authentication Algorithm (DAA)</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">DAA</div>
+        <h3>DES-CBC based MAC</h3>
+        <ul>
+          <li>Widely used MAC based on DES-CBC</li>
+          <li>Use IV = 0 and zero-pad of final block</li>
+          <li>Encrypt message using DES in CBC mode</li>
+          <li>Send just the final block (or leftmost M bits, 16 ≤ M ≤ 64) as the MAC</li>
+        </ul>
+        <div class="callout warn" style="margin-top:.75rem">Final MAC is now <strong>too small for security</strong> — and message blocks could be reordered. Hence the move to CMAC.</div>
+      </div>
+      <div class="card must">
+        <div class="card-tag gold">CMAC</div>
+        <h3>Cipher-based MAC (NIST SP 800-38B)</h3>
+        <ul>
+          <li>Overcomes DAA's message-size limitation</li>
+          <li>Uses <strong>2 keys</strong> &amp; padding</li>
+          <li>Adopted as a standard by NIST</li>
+          <li>Widely used in government &amp; industry</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 5 — AUTHENTICATED ENCRYPTION
+═══════════════════════════════════════ -->
+<section class="section" id="s5">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">05</span>
+      <h2 class="section-title">Authenticated <span>Encryption</span></h2>
+    </div>
+
+    <div class="callout reveal">
+      Simultaneously protect <strong>confidentiality</strong> AND <strong>authenticity</strong> of communications. Often required, but historically done separately — leading to subtle bugs.
+    </div>
+
+    <div class="divider reveal">Four Composition Approaches</div>
+    <div class="cards two reveal">
+      <div class="card">
+        <div class="card-tag">Approach A</div>
+        <h3>Hash-then-Encrypt</h3>
+        <div class="formula">E(K, (M || H(M)))</div>
+      </div>
+      <div class="card">
+        <div class="card-tag">Approach B</div>
+        <h3>MAC-then-Encrypt</h3>
+        <div class="formula">E(K₂, (M || MAC(K₁, M)))</div>
+      </div>
+      <div class="card">
+        <div class="card-tag">Approach C</div>
+        <h3>Encrypt-then-MAC</h3>
+        <div class="formula">C = E(K₂, M),  T = MAC(K₁, C)</div>
+      </div>
+      <div class="card">
+        <div class="card-tag">Approach D</div>
+        <h3>Encrypt-and-MAC</h3>
+        <div class="formula">C = E(K₂, M),  T = MAC(K₁, M)</div>
+      </div>
+    </div>
+    <div class="callout warn reveal" style="margin-top:1rem">
+      Decryption / verification is straightforward — but each composition has subtle <strong>security vulnerabilities</strong>. Modern protocols use dedicated AEAD modes like CCM or GCM.
+    </div>
+
+    <div class="divider must reveal">★ CCM — Counter with CBC-MAC</div>
+    <div class="cards reveal">
+      <div class="card must">
+        <div class="card-tag gold">NIST SP 800-38C</div>
+        <h3>Used in WiFi (WPA2)</h3>
+        <ul>
+          <li>Variation of <strong>encrypt-and-MAC</strong> approach</li>
+          <li>Algorithmic ingredients:
+            <ul style="margin-left:.5rem">
+              <li>AES encryption algorithm</li>
+              <li>CTR mode of operation</li>
+              <li>CMAC authentication algorithm</li>
+            </ul>
+          </li>
+          <li><strong>Single key</strong> used for both encryption &amp; MAC</li>
+        </ul>
+      </div>
+      <div class="card must">
+        <div class="card-tag gold">GCM — NIST SP 800-38D</div>
+        <h3>Galois / Counter Mode</h3>
+        <ul>
+          <li><strong>Parallelizable</strong> — high performance</li>
+          <li>Message encrypted in variant of CTR</li>
+          <li>Ciphertext multiplied with key &amp; length over GF(2¹²⁸) to generate authenticator tag</li>
+          <li>GMAC — MAC-only mode also defined</li>
+          <li>Uses two functions: <strong>GHASH</strong> (keyed hash) and <strong>GCTR</strong> (CTR with incremented counter)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 6 — PRNG
+═══════════════════════════════════════ -->
+<section class="section" id="s6">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">06</span>
+      <h2 class="section-title">PRNG using <span>Hash &amp; MAC</span></h2>
+    </div>
+
+    <div class="callout reveal">
+      Essential elements of any PRNG: a <strong>seed value</strong> + a <strong>deterministic algorithm</strong>. The seed must be known only as needed.
+    </div>
+
+    <div class="cards two reveal" style="margin-top:2rem">
+      <div class="card">
+        <div class="card-tag">Hash-based PRNG</div>
+        <h3>SP800-90 / ISO 18031</h3>
+        <div class="formula">Take seed V
+Repeat:
+  V = V + 1
+  output = n-bits of Hash(V)</div>
+        <p style="margin-top:.5rem">Secure if a good hash is used.</p>
+      </div>
+      <div class="card">
+        <div class="card-tag">MAC-based PRNG</div>
+        <h3>SP800-90, IEEE 802.11i, TLS</h3>
+        <ul>
+          <li>Use a key K</li>
+          <li>Input based on the last hash in various ways</li>
+          <li>Output drives session-key generation</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 7 — DIGITAL SIGNATURES
+═══════════════════════════════════════ -->
+<section class="section" id="s7">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">07</span>
+      <h2 class="section-title must">Digital <span>Signatures</span></h2>
+    </div>
+
+    <div class="callout gold reveal">
+      <strong>★ Why Digital Signatures?</strong> Message authentication does NOT address <em>lack of trust</em>. Digital signatures additionally provide:
+      <ul style="margin-top:.5rem">
+        <li>Verify <strong>author</strong>, <strong>date</strong> &amp; <strong>time</strong> of signature</li>
+        <li>Authenticate message contents</li>
+        <li>Be verified by <strong>third parties</strong> to resolve disputes (non-repudiation)</li>
+      </ul>
+    </div>
+
+    <div class="divider reveal">Attacks on Signatures</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Attack Models</div>
+        <h3>Five attack types</h3>
+        <ul>
+          <li><strong style="color:var(--text)">Key-only attack</strong></li>
+          <li><strong style="color:var(--text)">Known message attack</strong></li>
+          <li><strong style="color:var(--text)">Generic chosen message attack</strong></li>
+          <li><strong style="color:var(--text)">Directed chosen message attack</strong></li>
+          <li><strong style="color:var(--text)">Adaptive chosen message attack</strong></li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Break Levels</div>
+        <h3>Success severity</h3>
+        <ul>
+          <li><strong style="color:var(--text)">Total break</strong> — recover signing key</li>
+          <li><strong style="color:var(--text)">Selective forgery</strong> — forge for chosen msg</li>
+          <li><strong style="color:var(--text)">Existential forgery</strong> — forge for some msg</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider must reveal">★ Signature Requirements</div>
+    <div class="axiom-list reveal">
+      <div class="axiom"><span class="axiom-id">S1</span><span><strong style="color:var(--text)">Depend on the message</strong> signed</span></div>
+      <div class="axiom"><span class="axiom-id">S2</span><span><strong style="color:var(--text)">Use info unique to sender</strong> — to prevent both forgery and denial</span></div>
+      <div class="axiom"><span class="axiom-id">S3</span><span><strong style="color:var(--text)">Relatively easy to produce</strong></span></div>
+      <div class="axiom"><span class="axiom-id">S4</span><span><strong style="color:var(--text)">Relatively easy to recognize &amp; verify</strong></span></div>
+      <div class="axiom"><span class="axiom-id">S5</span><span><strong style="color:var(--text)">Computationally infeasible to forge</strong> — both with new message for existing signature, and with fraudulent signature for given message</span></div>
+      <div class="axiom"><span class="axiom-id">S6</span><span><strong style="color:var(--text)">Practical to save</strong> in storage</span></div>
+    </div>
+
+    <div class="divider reveal">Direct Digital Signatures</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Two-Party Scheme</div>
+        <h3>Sender ↔ Receiver only</h3>
+        <ul>
+          <li>Assumes receiver has sender's public key</li>
+          <li>Signature made by sender signing entire message (or its hash) with private key</li>
+          <li>Can encrypt using receiver's public key for confidentiality</li>
+          <li><strong>Important: sign first, then encrypt</strong> the message + signature</li>
+          <li>Security depends entirely on sender's private key</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 8 — ELGAMAL & SCHNORR
+═══════════════════════════════════════ -->
+<section class="section" id="s8">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">08</span>
+      <h2 class="section-title must">ElGamal &amp; <span>Schnorr Signatures</span></h2>
+    </div>
+
+    <div class="divider must reveal">★ ElGamal Digital Signature</div>
+    <div class="callout gold reveal">
+      Signature variant of ElGamal, related to D-H. Uses exponentiation in a finite (Galois) field. Security based on difficulty of computing <strong>discrete logarithms</strong>. Uses private key for signing, public key for verification.
+    </div>
+
+    <div class="divider reveal">Key Generation</div>
+    <div class="formula reveal">Each user A:
+  Chooses secret key:  1 &lt; <span class="hl">x_A</span> &lt; q − 1
+  Computes public key: <span class="hl2">y_A = a^(x_A) mod q</span></div>
+
+    <div class="divider reveal">Signing</div>
+    <div class="formula reveal">Alice signs message M to Bob:
+  1. Compute hash:        m = H(M),  0 ≤ m ≤ q−1
+  2. Choose random K:     1 ≤ K ≤ q−1, gcd(K, q−1) = 1
+  3. Temporary key:       <span class="hl">S₁ = a^K mod q</span>
+  4. Compute K⁻¹ mod (q−1)
+  5. <span class="hl2">S₂ = K⁻¹ · (m − x_A · S₁) mod (q−1)</span>
+  6. Signature is the pair: <span class="hl3">(S₁, S₂)</span></div>
+
+    <div class="divider reveal">Verification</div>
+    <div class="formula reveal">Any user B verifies by computing:
+  V₁ = a^m mod q
+  V₂ = (y_A)^S₁ · (S₁)^S₂ mod q
+
+Signature valid iff <span class="hl">V₁ = V₂</span></div>
+
+    <div class="divider reveal">Worked Example — GF(19), a = 10</div>
+    <div class="formula reveal">Alice's key:  x_A = 16  →  y_A = 10¹⁶ mod 19 = <span class="hl">4</span>
+
+Sign message with hash m = 14:
+  Random K = 5  (gcd(18, 5) = 1)
+  S₁ = 10⁵ mod 19 = <span class="hl">3</span>
+  K⁻¹ mod 18 = 5⁻¹ mod 18 = 11
+  S₂ = 11 · (14 − 16·3) mod 18 = <span class="hl">4</span>
+  Signature: (3, 4)
+
+Verification:
+  V₁ = 10¹⁴ mod 19 = <span class="hl2">16</span>
+  V₂ = 4³ · 3⁴ = 5184 mod 19 = <span class="hl2">16</span>  ✓</div>
+
+    <div class="divider must reveal">★ Schnorr Digital Signatures</div>
+    <div class="cards reveal">
+      <div class="card must">
+        <div class="card-tag gold">Schnorr Setup</div>
+        <h3>Properties</h3>
+        <ul>
+          <li>Also uses exponentiation in a finite (Galois) field</li>
+          <li>Security based on <strong>discrete logarithms</strong></li>
+          <li>Minimizes message-dependent computation — multiplying a 2n-bit integer with an n-bit integer</li>
+          <li>Main work can be done in <strong>idle time</strong> (precomputation)</li>
+          <li>Prime modulus p; p−1 has prime factor q (typically p = 1024-bit, q = 160-bit)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Key Setup</div>
+        <h3>Schnorr Keys</h3>
+        <div class="formula">Choose primes p, q where q | (p−1)
+Choose a such that  a^q = 1 mod p
+(a, p, q) are global parameters.
+
+Each user A:
+  Secret key:  0 &lt; s_A &lt; q
+  Public key:  v_A = a^(−s_A) mod q</div>
+      </div>
+    </div>
+
+    <div class="divider reveal">Schnorr Signing &amp; Verification</div>
+    <div class="formula reveal"><span class="hl">SIGN:</span>
+  Choose random r,  0 &lt; r &lt; q
+  x = a^r mod p
+  e = H(M || x)
+  y = (r + s·e) mod q
+  Signature = (e, y)
+
+<span class="hl2">VERIFY:</span>
+  x' = a^y · v^e mod p
+  Check:  e == H(M || x')</div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 9 — DSS / DSA
+═══════════════════════════════════════ -->
+<section class="section" id="s9">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">09</span>
+      <h2 class="section-title must">Digital Signature Standard <span>(DSS / DSA)</span></h2>
+    </div>
+
+    <div class="callout gold reveal">
+      <strong>★ DSS</strong> — US Govt approved signature scheme. Designed by NIST &amp; NSA in early 90s. Published as <strong>FIPS-186</strong> in 1991, revised 1993, 1996, 2000. Uses the <strong>SHA</strong> hash algorithm. <strong>DSS</strong> is the standard, <strong>DSA</strong> is the algorithm. FIPS 186-2 (2000) added RSA &amp; ECC variants.
+    </div>
+
+    <div class="cards two reveal" style="margin-top:2rem">
+      <div class="card must">
+        <div class="card-tag gold">DSA Properties</div>
+        <h3>At a glance</h3>
+        <ul>
+          <li>Creates a <strong>320-bit signature</strong></li>
+          <li>With 512–1024 bit security</li>
+          <li>Smaller and faster than RSA</li>
+          <li><strong>Digital signature scheme only</strong> — unlike RSA which also encrypts</li>
+          <li>Public-key technique</li>
+          <li>Security depends on difficulty of discrete logarithms</li>
+          <li>A variant of ElGamal &amp; Schnorr schemes</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">DSS vs RSA</div>
+        <h3>Key difference</h3>
+        <ul>
+          <li>RSA: signature = encryption with private key, verification = decryption with public key</li>
+          <li>DSS: signature uses random k and the message hash; verification uses a different equation</li>
+          <li>DSS cannot be used to encrypt — only sign</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider must reveal">★ DSA Key Generation</div>
+    <div class="formula gold reveal">Global public key (p, q, g):
+  Choose 160-bit prime q
+  Choose large prime p with 2^(L−1) &lt; p &lt; 2^L
+    where L = 512–1024, multiple of 64
+    such that q is a 160-bit prime divisor of (p−1)
+  Choose g = h^((p−1)/q) mod p
+    where 1 &lt; h &lt; p−1 and g &gt; 1
+
+Each user:
+  Private key:  random x &lt; q
+  Public key:   <span class="hl">y = g^x mod p</span></div>
+
+    <div class="divider must reveal">★ DSA Signature Creation</div>
+    <div class="formula gold reveal">To sign message M, sender:
+  Generates random signature key k,  k &lt; q
+  ⚠️ k must be random, destroyed after use,
+     and <span class="hl">NEVER reused</span>
+
+Compute signature pair:
+  <span class="hl">r = (g^k mod p) mod q</span>
+  <span class="hl2">s = [k⁻¹ (H(M) + x·r)] mod q</span>
+
+Send (r, s) with message M</div>
+
+    <div class="divider must reveal">★ DSA Signature Verification</div>
+    <div class="formula gold reveal">Receiver has M, (r, s):
+  w  = s⁻¹ mod q
+  u₁ = [H(M) · w] mod q
+  u₂ = (r · w) mod q
+  v  = [(g^u₁ · y^u₂) mod p] mod q
+
+Signature valid iff <span class="hl">v = r</span></div>
+
+    <div class="callout warn reveal">
+      <strong>Critical:</strong> reuse of <code>k</code> across two different messages allows recovery of the private key. PlayStation 3 was famously broken because Sony reused k.
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 10 — KERBEROS
+═══════════════════════════════════════ -->
+<section class="section" id="s10">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">10</span>
+      <h2 class="section-title must"><span>Kerberos</span></h2>
+    </div>
+
+    <div class="callout gold reveal">
+      <strong>★ Kerberos</strong> — trusted key server system from MIT. Provides centralised <strong>private-key third-party authentication</strong> in a distributed network. Allows users access to services distributed through a network without needing to trust all workstations — instead, all parties trust a central authentication server. Two versions in active use: <strong>v4</strong> &amp; <strong>v5</strong>.
+    </div>
+
+    <div class="divider reveal">Kerberos Requirements</div>
+    <div class="cards reveal">
+      <div class="card"><div class="card-tag">Req 1</div><h3>Secure</h3><p>Resist eavesdropping and impersonation.</p></div>
+      <div class="card"><div class="card-tag">Req 2</div><h3>Reliable</h3><p>Service must be highly available — KDC failure = no logins.</p></div>
+      <div class="card"><div class="card-tag">Req 3</div><h3>Transparent</h3><p>User shouldn't notice authentication beyond entering a password.</p></div>
+      <div class="card"><div class="card-tag">Req 4</div><h3>Scalable</h3><p>Support many clients and servers across realms.</p></div>
+    </div>
+
+    <div class="divider must reveal">★ Kerberos v4 — Two Servers</div>
+    <div class="cards two reveal">
+      <div class="card must">
+        <div class="card-tag gold">AS — Authentication Server</div>
+        <h3>Initial credential</h3>
+        <ul>
+          <li>Users initially negotiate with AS to identify themselves</li>
+          <li>AS provides a non-corruptible authentication credential — the <strong>Ticket Granting Ticket (TGT)</strong></li>
+        </ul>
+      </div>
+      <div class="card must">
+        <div class="card-tag gold">TGS — Ticket Granting Server</div>
+        <h3>Service tickets</h3>
+        <ul>
+          <li>Users subsequently request access to other services from the TGS</li>
+          <li>TGS issues service tickets on the basis of the user's TGT</li>
+          <li>Uses a complex protocol with DES</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider reveal">Kerberos v4 Dialogue (Simplified)</div>
+    <div class="formula reveal"><span class="hl">1. C → AS:</span>   ID_C, ID_TGS, TS₁
+<span class="hl2">2. AS → C:</span>   E(K_C, [K_{C,TGS}, ID_TGS, TS₂, Lifetime, Ticket_TGS])
+                where Ticket_TGS = E(K_TGS, [K_{C,TGS}, ID_C, AD_C, ID_TGS, TS₂, Lifetime])
+
+<span class="hl">3. C → TGS:</span>  ID_V, Ticket_TGS, Authenticator_C
+<span class="hl2">4. TGS → C:</span>  E(K_{C,TGS}, [K_{C,V}, ID_V, TS₄, Ticket_V])
+
+<span class="hl">5. C → V:</span>    Ticket_V, Authenticator_C
+<span class="hl2">6. V → C:</span>    E(K_{C,V}, TS₅ + 1)   (mutual authentication)</div>
+
+    <div class="divider reveal">Kerberos Realms</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Realm Definition</div>
+        <h3>Single administrative domain</h3>
+        <ul>
+          <li>A Kerberos environment consists of: a Kerberos server, registered clients, and application servers sharing keys with the server</li>
+          <li>This is termed a <strong>realm</strong></li>
+          <li>Typically a single administrative domain</li>
+          <li>Multiple realms must share keys and trust between their Kerberos servers</li>
+        </ul>
+      </div>
+      <div class="card must">
+        <div class="card-tag gold">Kerberos Version 5</div>
+        <h3>Improvements over v4</h3>
+        <ul>
+          <li>Developed mid-1990s, standardised as <strong>RFC 1510</strong></li>
+          <li><strong>Environmental fixes:</strong> encryption alg, network protocol, byte order, ticket lifetime, authentication forwarding, inter-realm auth</li>
+          <li><strong>Technical fixes:</strong> double encryption, non-standard mode of use, session keys, password attacks</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 11 — X.509
+═══════════════════════════════════════ -->
+<section class="section" id="s11">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">11</span>
+      <h2 class="section-title must">X.509 <span>Certificates</span></h2>
+    </div>
+
+    <div class="callout gold reveal">
+      <strong>★ Public-Key Certificates</strong> allow key exchange <em>without</em> real-time access to a public-key authority. A certificate <strong>binds identity to public key</strong>, with all contents signed by a trusted Certificate Authority (CA). Anyone who knows the CA's public key can verify it.
+    </div>
+
+    <div class="divider reveal">X.509 Authentication Service</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Origin</div>
+        <h3>CCITT X.500</h3>
+        <ul>
+          <li>Part of CCITT X.500 directory service standards</li>
+          <li>Distributed servers maintaining a user-info database</li>
+          <li>Defines a framework for authentication services</li>
+          <li>Directory may store public-key certificates with user public key signed by CA</li>
+          <li>Also defines authentication protocols</li>
+          <li>Uses public-key crypto &amp; digital signatures (RSA recommended)</li>
+          <li>X.509 certs are widely used; have 3 versions</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider must reveal">★ X.509 Certificate Fields</div>
+    <div class="reveal" style="overflow-x:auto">
+      <table class="data-table">
+        <thead><tr><th>Field</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>Version V</td><td>Certificate format version (1, 2, or 3)</td></tr>
+          <tr><td>Serial Number SN</td><td>Unique within the CA — identifies the certificate</td></tr>
+          <tr><td>Signature Algorithm AI</td><td>Algorithm + parameters used to sign cert</td></tr>
+          <tr><td>Issuer Name</td><td>X.500 name of the CA</td></tr>
+          <tr><td>Period of Validity T_A</td><td>From-date and to-date</td></tr>
+          <tr><td>Subject Name</td><td>X.500 name of the cert owner</td></tr>
+          <tr><td>Subject Public-Key Info A_p</td><td>Algorithm, parameters, key</td></tr>
+          <tr><td>Issuer Unique Identifier</td><td>v2+</td></tr>
+          <tr><td>Subject Unique Identifier</td><td>v2+</td></tr>
+          <tr><td>Extension Fields</td><td>v3 only</td></tr>
+          <tr><td>Signature</td><td>Hash of all fields, signed by CA</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="reveal" style="font-size:.8rem;color:var(--dim);margin-top:.5rem">Notation: <strong>CA&lt;&lt;A&gt;&gt;</strong> denotes a certificate for A signed by CA.</p>
+
+    <div class="divider reveal">Obtaining a Certificate</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Public Distribution</div>
+        <h3>Properties</h3>
+        <ul>
+          <li>Any user with access to the CA can get any certificate from it</li>
+          <li><strong>Only the CA</strong> can modify a certificate</li>
+          <li>Because they cannot be forged, certificates can be placed in a public directory</li>
+        </ul>
+      </div>
+      <div class="card must">
+        <div class="card-tag gold">CA Hierarchy</div>
+        <h3>Cross-CA verification</h3>
+        <ul>
+          <li>If both users share a common CA they're assumed to know its public key</li>
+          <li>Otherwise CAs must form a <strong>hierarchy</strong></li>
+          <li>Use certificates linking members of hierarchy to validate other CAs</li>
+          <li>Each CA has certificates for clients (forward) and parent (backward)</li>
+          <li>Each client trusts parent's certificates</li>
+          <li>Enables verification of any cert from one CA by users of all other CAs in the hierarchy</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider reveal">Certificate Revocation</div>
+    <div class="callout warn reveal">
+      Certificates have a period of validity — but may need to be revoked <em>before</em> expiry:
+      <ol style="margin-top:.5rem;margin-left:1.5rem">
+        <li>User's private key is compromised</li>
+        <li>User is no longer certified by this CA</li>
+        <li>CA's certificate is itself compromised</li>
+      </ol>
+      CAs maintain a <strong>Certificate Revocation List (CRL)</strong>. Users should always check certificates against the CA's CRL.
+    </div>
+
+    <div class="divider reveal">X.509 Version 3 Extensions</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Why v3?</div>
+        <h3>Generic extension method</h3>
+        <ul>
+          <li>Additional info needed: email/URL, policy details, usage constraints</li>
+          <li>Rather than naming new fields explicitly, defined a general extension method</li>
+          <li>Each extension consists of: identifier, criticality indicator, value</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Extension Categories</div>
+        <h3>Three groups</h3>
+        <ul>
+          <li><strong>Key &amp; policy info</strong> — about subject &amp; issuer keys, certificate policy</li>
+          <li><strong>Subject &amp; issuer attributes</strong> — alternative names/formats</li>
+          <li><strong>Certification path constraints</strong> — limit how other CAs can use this cert</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 12 — PKI
+═══════════════════════════════════════ -->
+<section class="section" id="s12">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">12</span>
+      <h2 class="section-title">Public Key <span>Infrastructure (PKI)</span></h2>
+    </div>
+
+    <div class="callout reveal">
+      <strong>PKI</strong> is the set of hardware, software, people, policies and procedures needed to create, manage, store, distribute and revoke digital certificates based on asymmetric crypto.
+    </div>
+
+    <div class="divider reveal">PKIX Management Functions</div>
+    <div class="cards reveal">
+      <div class="card"><div class="card-tag">F1</div><h3>Registration</h3><p>Bind user identity to certificate request.</p></div>
+      <div class="card"><div class="card-tag">F2</div><h3>Initialization</h3><p>Establish trust anchors and initial keys.</p></div>
+      <div class="card"><div class="card-tag">F3</div><h3>Certification</h3><p>CA issues certificate after verifying request.</p></div>
+      <div class="card"><div class="card-tag">F4</div><h3>Key Pair Recovery</h3><p>Restore lost decryption keys (escrow).</p></div>
+      <div class="card"><div class="card-tag">F5</div><h3>Key Pair Update</h3><p>Periodic re-keying for active certificates.</p></div>
+      <div class="card"><div class="card-tag">F6</div><h3>Revocation Request</h3><p>User or CA flags certificate as no-longer-valid.</p></div>
+      <div class="card"><div class="card-tag">F7</div><h3>Cross Certification</h3><p>Trust between distinct CAs/realms.</p></div>
+    </div>
+
+    <div class="callout green reveal" style="margin-top:1.5rem">
+      <strong>Management protocols:</strong> <strong>CMP</strong> (Certificate Management Protocol) and <strong>CMC</strong> (Certificate Management over CMS).
+    </div>
+
+    <div class="divider reveal">Summary of Unit IV</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Distribution</div>
+        <h3>Symmetric key distribution</h3>
+        <ul>
+          <li>Using symmetric encryption</li>
+          <li>Using public-key encryption</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Public Keys</div>
+        <h3>Distribution methods</h3>
+        <ul>
+          <li>Public announcement</li>
+          <li>Public directory</li>
+          <li>Public-key authority</li>
+          <li>Public-key certificates (CA)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Standards</div>
+        <h3>Authentication frameworks</h3>
+        <ul>
+          <li>X.509 authentication and certificates</li>
+          <li>PKI / PKIX</li>
+          <li>Kerberos</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer style="padding:3rem 6vw;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem">
+  <div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--muted)">Unit IV — Authentication &amp; Key Management</div>
+    <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--dim);margin-top:.25rem;letter-spacing:.1em">MAC → HMAC → CMAC → CCM/GCM → SIGNATURES → DSS → KERBEROS → X.509 → PKI</div>
+  </div>
+  <div class="unit-nav" style="margin:0">
+    <a href="index.html">← Unit III</a>
+    <a href="unit5.html">Unit V →</a>
+  </div>
+</footer>
+
+<script>
+  const reveals = document.querySelectorAll('.reveal');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach((e) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), 60);
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.08 });
+  reveals.forEach(r => obs.observe(r));
+
+  const dots = document.querySelectorAll('.float-dot');
+  const sectionIds = ['hero','s1','s2','s3','s4','s5','s6','s7','s8','s9','s10','s11','s12'];
+  const sections = sectionIds.map(id => document.getElementById(id));
+
+  dots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      const target = document.getElementById(dot.dataset.target);
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+
+  window.addEventListener('scroll', () => {
+    const scrollY = window.scrollY + window.innerHeight / 2;
+    let active = 0;
+    sections.forEach((s, i) => {
+      if (s && s.offsetTop <= scrollY) active = i;
+    });
+    dots.forEach((d, i) => d.classList.toggle('active', i === active));
+  }, { passive: true });
+</script>
+</body>
+</html>

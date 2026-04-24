@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unit III — Network Security & Cryptography</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0f;
+    --surface: #13131a;
+    --card: #18181f;
+    --border: rgba(255,255,255,0.07);
+    --accent: #c8a96e;
+    --accent2: #7eb8c9;
+    --accent3: #a98ae0;
+    --accent4: #7ec99a;
+    --text: #e8e6df;
+    --muted: #8a8882;
+    --dim: #4a4845;
+    --code-bg: #0a0a0e;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Outfit',sans-serif;
+    font-weight:300;
+    line-height:1.7;
+    overflow-x:hidden;
+  }
+
+  /* ── NOISE TEXTURE ── */
+  body::before{
+    content:'';
+    position:fixed;inset:0;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events:none;z-index:999;opacity:.4;
+  }
+
+  /* ── HERO ── */
+  .hero{
+    min-height:100vh;
+    display:flex;flex-direction:column;justify-content:center;
+    padding:4rem 6vw;
+    position:relative;
+    border-bottom:1px solid var(--border);
+  }
+  .hero::after{
+    content:'';
+    position:absolute;top:0;right:0;
+    width:55%;height:100%;
+    background:radial-gradient(ellipse at 80% 40%, rgba(200,169,110,0.06) 0%, transparent 60%),
+               radial-gradient(ellipse at 95% 80%, rgba(126,184,201,0.05) 0%, transparent 50%);
+    pointer-events:none;
+  }
+  .hero-label{
+    font-family:'DM Mono',monospace;
+    font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--accent);margin-bottom:1.5rem;
+    display:flex;align-items:center;gap:.75rem;
+  }
+  .hero-label::before{content:'';display:block;width:2rem;height:1px;background:var(--accent);}
+  .hero h1{
+    font-family:'Cormorant Garamond',serif;
+    font-size:clamp(3.5rem,8vw,7rem);
+    font-weight:300;line-height:1.05;
+    letter-spacing:-.02em;
+    max-width:800px;
+  }
+  .hero h1 em{font-style:italic;color:var(--accent);}
+  .hero-sub{
+    margin-top:2rem;
+    font-size:.95rem;color:var(--muted);
+    max-width:500px;font-weight:300;
+  }
+  .toc-grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+    gap:.5rem;margin-top:3rem;max-width:900px;
+  }
+  .toc-item{
+    padding:.75rem 1rem;
+    border:1px solid var(--border);
+    border-radius:4px;
+    font-size:.8rem;
+    color:var(--muted);
+    cursor:pointer;
+    transition:all .2s;
+    text-decoration:none;
+    display:flex;align-items:center;gap:.5rem;
+  }
+  .toc-item:hover{
+    border-color:var(--accent);color:var(--accent);
+    background:rgba(200,169,110,0.04);
+  }
+  .toc-item .dot{
+    width:5px;height:5px;border-radius:50%;
+    background:currentColor;flex-shrink:0;
+  }
+
+  /* ── LAYOUT ── */
+  .container{max-width:1200px;margin:0 auto;padding:0 6vw;}
+  .section{padding:5rem 0;border-bottom:1px solid var(--border);}
+  .section-header{
+    display:flex;align-items:baseline;gap:1.5rem;
+    margin-bottom:3rem;
+  }
+  .section-num{
+    font-family:'DM Mono',monospace;
+    font-size:.65rem;color:var(--dim);letter-spacing:.1em;
+    flex-shrink:0;
+  }
+  .section-title{
+    font-family:'Cormorant Garamond',serif;
+    font-size:clamp(1.8rem,3.5vw,2.8rem);
+    font-weight:400;letter-spacing:-.01em;
+  }
+  .section-title span{color:var(--accent);}
+
+  /* ── CARDS ── */
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1px;background:var(--border);}
+  .cards.two{grid-template-columns:repeat(auto-fill,minmax(380px,1fr));}
+  .card{
+    background:var(--card);padding:1.75rem;
+    transition:background .2s;
+  }
+  .card:hover{background:rgba(30,30,40,0.9);}
+  .card-tag{
+    font-family:'DM Mono',monospace;
+    font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--accent);margin-bottom:.75rem;
+  }
+  .card h3{
+    font-family:'Cormorant Garamond',serif;
+    font-size:1.3rem;font-weight:500;
+    margin-bottom:.75rem;
+  }
+  .card p,ul{font-size:.88rem;color:var(--muted);line-height:1.8;}
+  .card ul{list-style:none;padding:0;}
+  .card ul li{padding:.15rem 0;}
+  .card ul li::before{content:'→ ';color:var(--accent);font-size:.75rem;}
+
+  /* ── AXIOM LIST ── */
+  .axiom-list{display:flex;flex-direction:column;gap:.5rem;}
+  .axiom{
+    display:flex;gap:1rem;align-items:flex-start;
+    padding:.75rem 1rem;
+    border-left:2px solid var(--dim);
+    background:var(--surface);
+    font-size:.87rem;color:var(--muted);
+    transition:border-color .2s;
+  }
+  .axiom:hover{border-color:var(--accent);}
+  .axiom-id{
+    font-family:'DM Mono',monospace;
+    font-size:.7rem;color:var(--accent);
+    flex-shrink:0;margin-top:.1rem;
+  }
+
+  /* ── CODE / FORMULA BLOCKS ── */
+  .formula{
+    background:var(--code-bg);
+    border:1px solid var(--border);
+    border-left:3px solid var(--accent);
+    padding:1rem 1.25rem;
+    font-family:'DM Mono',monospace;
+    font-size:.82rem;color:#ccc;
+    overflow-x:auto;margin:.75rem 0;
+    line-height:1.9;
+    border-radius:0 4px 4px 0;
+  }
+  .formula .hl{color:var(--accent);}
+  .formula .hl2{color:var(--accent2);}
+  .formula .hl3{color:var(--accent3);}
+
+  /* ── HIERARCHY FLOW ── */
+  .flow{
+    display:flex;align-items:center;gap:.5rem;
+    flex-wrap:wrap;margin:1.5rem 0;
+  }
+  .flow-node{
+    padding:.5rem 1.25rem;
+    border:1px solid var(--border);
+    border-radius:2px;
+    font-size:.83rem;
+    background:var(--surface);
+    color:var(--text);
+  }
+  .flow-node.active{
+    border-color:var(--accent);
+    color:var(--accent);
+    background:rgba(200,169,110,0.06);
+  }
+  .flow-arrow{color:var(--dim);font-size:.8rem;}
+
+  /* ── TABLE ── */
+  .data-table{width:100%;border-collapse:collapse;font-size:.82rem;}
+  .data-table th{
+    text-align:left;padding:.6rem 1rem;
+    background:var(--surface);
+    font-family:'DM Mono',monospace;
+    font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--accent);border-bottom:1px solid var(--border);
+  }
+  .data-table td{
+    padding:.6rem 1rem;
+    border-bottom:1px solid rgba(255,255,255,0.04);
+    color:var(--muted);
+    vertical-align:middle;
+  }
+  .data-table tr:hover td{background:rgba(255,255,255,0.02);}
+  .data-table td:first-child{color:var(--text);}
+
+  /* ── STEPS ── */
+  .steps{display:flex;flex-direction:column;gap:0;}
+  .step{
+    display:flex;gap:1.5rem;
+    padding:1rem 0;
+    border-bottom:1px solid var(--border);
+  }
+  .step:last-child{border-bottom:none;}
+  .step-num{
+    font-family:'DM Mono',monospace;
+    font-size:1.8rem;font-weight:300;
+    color:var(--dim);flex-shrink:0;
+    min-width:2.5rem;line-height:1.2;
+  }
+  .step-body h4{font-size:.9rem;font-weight:500;margin-bottom:.2rem;color:var(--text);}
+  .step-body p{font-size:.83rem;color:var(--muted);}
+
+  /* ── BADGE ── */
+  .badge{
+    display:inline-block;
+    padding:.15rem .6rem;
+    background:rgba(200,169,110,0.1);
+    border:1px solid rgba(200,169,110,0.25);
+    border-radius:2px;
+    font-size:.7rem;color:var(--accent);
+    font-family:'DM Mono',monospace;
+    letter-spacing:.06em;
+  }
+  .badge.blue{background:rgba(126,184,201,0.1);border-color:rgba(126,184,201,0.25);color:var(--accent2);}
+  .badge.purple{background:rgba(169,138,224,0.1);border-color:rgba(169,138,224,0.25);color:var(--accent3);}
+  .badge.green{background:rgba(126,201,154,0.1);border-color:rgba(126,201,154,0.25);color:var(--accent4);}
+
+  /* ── CALLOUT ── */
+  .callout{
+    padding:1rem 1.25rem;
+    border-left:3px solid var(--accent2);
+    background:rgba(126,184,201,0.04);
+    font-size:.86rem;color:var(--muted);
+    margin:.75rem 0;
+  }
+  .callout.warn{border-color:#c97e7e;background:rgba(201,126,126,0.04);}
+  .callout.green{border-color:var(--accent4);background:rgba(126,201,154,0.04);}
+  .callout strong{color:var(--text);}
+
+  /* ── COMPARISON GRID ── */
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);}
+  .compare-col{background:var(--card);padding:1.5rem;}
+  .compare-col h4{
+    font-family:'Cormorant Garamond',serif;
+    font-size:1.1rem;margin-bottom:1rem;
+    padding-bottom:.5rem;border-bottom:1px solid var(--border);
+  }
+
+  /* ── DIVIDER ── */
+  .divider{
+    display:flex;align-items:center;gap:1rem;
+    margin:2.5rem 0;
+    color:var(--dim);font-size:.7rem;
+    font-family:'DM Mono',monospace;letter-spacing:.1em;text-transform:uppercase;
+  }
+  .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+
+  /* ── SCROLL FADE IN ── */
+  .reveal{opacity:0;transform:translateY(16px);transition:opacity .55s ease,transform .55s ease;}
+  .reveal.visible{opacity:1;transform:translateY(0);}
+
+  /* ── FLOATING NAV ── */
+  .float-nav{
+    position:fixed;top:50%;right:1.5rem;
+    transform:translateY(-50%);
+    display:flex;flex-direction:column;gap:.5rem;
+    z-index:100;
+  }
+  .float-dot{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--dim);
+    cursor:pointer;transition:all .2s;
+    title:'';
+  }
+  .float-dot:hover,.float-dot.active{background:var(--accent);transform:scale(1.4);}
+
+  /* ── UNIT NAV ── */
+  .unit-nav{
+    display:flex;gap:.5rem;margin-bottom:2.5rem;
+  }
+  .unit-nav a{
+    font-family:'DM Mono',monospace;
+    font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;
+    padding:.4rem .9rem;
+    border:1px solid var(--border);
+    text-decoration:none;color:var(--muted);
+    border-radius:3px;transition:all .2s;
+  }
+  .unit-nav a:hover{border-color:var(--accent);color:var(--accent);}
+  .unit-nav a.current{border-color:var(--accent);color:var(--accent);background:rgba(200,169,110,0.06);}
+
+  /* ── MUST-KNOW ★ MARKERS ── */
+  .toc-item.must::after{
+    content:'★';color:var(--accent);font-size:.7rem;margin-left:auto;
+  }
+  .section-title.must::after{
+    content:' ★';color:var(--accent);font-size:.6em;vertical-align:super;
+  }
+  .divider.must{color:var(--accent);}
+  .divider.must::before,.divider.must::after{
+    background:linear-gradient(90deg, transparent, rgba(200,169,110,0.4), transparent);
+  }
+  .card.must{border-top:2px solid var(--accent);}
+
+  @media(max-width:768px){
+    .float-nav{display:none;}
+    .compare{grid-template-columns:1fr;}
+    .cards.two{grid-template-columns:1fr;}
+    .hero{padding:3rem 5vw;}
+  }
+</style>
+</head>
+<body>
+
+<!-- Floating Nav -->
+<nav class="float-nav" id="floatNav">
+  <div class="float-dot" data-target="hero" title="Top"></div>
+  <div class="float-dot" data-target="s1" title="Algebraic Structures"></div>
+  <div class="float-dot" data-target="s2" title="Galois Fields"></div>
+  <div class="float-dot" data-target="s3" title="Polynomial Arithmetic"></div>
+  <div class="float-dot" data-target="s4" title="Public Key Crypto"></div>
+  <div class="float-dot" data-target="s5" title="RSA"></div>
+  <div class="float-dot" data-target="s6" title="Diffie-Hellman"></div>
+  <div class="float-dot" data-target="s7" title="ElGamal"></div>
+  <div class="float-dot" data-target="s8" title="ECC"></div>
+  <div class="float-dot" data-target="s9" title="Attacks & Standards"></div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="container">
+    <div class="unit-nav">
+      <a href="index.html" class="current">Unit III</a>
+      <a href="unit4.html">Unit IV</a>
+      <a href="unit5.html">Unit V</a>
+    </div>
+    <div class="hero-label">Network Security & Cryptography</div>
+    <h1>Unit <em>III</em><br>Mathematical<br>Foundations</h1>
+    <p class="hero-sub">Algebraic structures, finite fields, public-key cryptosystems — RSA, Diffie-Hellman, ElGamal, ECC — and their security foundations. Star (★) marks must-know exam topics.</p>
+    <nav class="toc-grid">
+      <a href="#s1" class="toc-item"><span class="dot"></span>Algebraic Structures</a>
+      <a href="#s2" class="toc-item must"><span class="dot"></span>Galois Fields GF(p) & GF(2ⁿ)</a>
+      <a href="#s3" class="toc-item"><span class="dot"></span>Polynomial Arithmetic</a>
+      <a href="#s4" class="toc-item must"><span class="dot"></span>Public Key Cryptography</a>
+      <a href="#s5" class="toc-item must"><span class="dot"></span>RSA Algorithm</a>
+      <a href="#s6" class="toc-item must"><span class="dot"></span>Diffie-Hellman Key Exchange</a>
+      <a href="#s7" class="toc-item must"><span class="dot"></span>ElGamal Cryptography</a>
+      <a href="#s8" class="toc-item must"><span class="dot"></span>Elliptic Curve Cryptography</a>
+      <a href="#s9" class="toc-item"><span class="dot"></span>Attacks & Standards</a>
+    </nav>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 1 — ALGEBRAIC STRUCTURES
+═══════════════════════════════════════ -->
+<section class="section" id="s1">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">01</span>
+      <h2 class="section-title">Algebraic <span>Structures</span></h2>
+    </div>
+
+    <div class="divider reveal">Hierarchy</div>
+    <div class="flow reveal">
+      <div class="flow-node">Set</div>
+      <div class="flow-arrow">⟶</div>
+      <div class="flow-node active">Group</div>
+      <div class="flow-arrow">⟶</div>
+      <div class="flow-node active">Ring</div>
+      <div class="flow-arrow">⟶</div>
+      <div class="flow-node active">Field</div>
+    </div>
+    <p class="reveal" style="font-size:.82rem;color:var(--muted);margin-bottom:2.5rem;">Each level adds more axioms/constraints. Fields are the richest structure.</p>
+
+    <!-- GROUP -->
+    <div class="divider reveal">Group G = {S, ·}</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Mnemonic</div>
+        <h3>CAIN Axioms</h3>
+        <ul>
+          <li><strong style="color:var(--text)">C</strong>losure — a,b ∈ G ⟹ a·b ∈ G</li>
+          <li><strong style="color:var(--text)">A</strong>ssociativity — (a·b)·c = a·(b·c)</li>
+          <li><strong style="color:var(--text)">I</strong>dentity — ∃ e such that a·e = e·a = a</li>
+          <li><strong style="color:var(--text)">N</strong>verses — ∃ a⁻¹ such that a·a⁻¹ = e</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Abelian Group</div>
+        <h3>+ Commutativity</h3>
+        <ul>
+          <li>All CAIN axioms hold</li>
+          <li>Additionally: a·b = b·a</li>
+          <li>The integers ℤ under addition form an abelian group</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Cyclic Group</div>
+        <h3>Generator Concept</h3>
+        <ul>
+          <li>Every element is a power of some fixed element a</li>
+          <li>b = aᵏ for some k, for every b in group</li>
+          <li>a is called the <em>generator</em></li>
+          <li>a³ = a·a·a (repeated application)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Formal Axioms -->
+    <div class="divider reveal">Formal Group Axioms</div>
+    <div class="axiom-list reveal">
+      <div class="axiom"><span class="axiom-id">A1</span><span><strong style="color:var(--text)">Closure</strong> — If a,b ∈ G then a·b ∈ G</span></div>
+      <div class="axiom"><span class="axiom-id">A2</span><span><strong style="color:var(--text)">Associativity</strong> — a·(b·c) = (a·b)·c for all a,b,c ∈ G</span></div>
+      <div class="axiom"><span class="axiom-id">A3</span><span><strong style="color:var(--text)">Identity</strong> — ∃ e ∈ G such that a·e = e·a = a for all a</span></div>
+      <div class="axiom"><span class="axiom-id">A4</span><span><strong style="color:var(--text)">Inverse</strong> — For each a ∈ G ∃ a' such that a·a' = a'·a = e</span></div>
+      <div class="axiom"><span class="axiom-id">A5</span><span><strong style="color:var(--text)">Commutative</strong> — a·b = b·a <em style="color:var(--dim)">(only for Abelian groups)</em></span></div>
+    </div>
+
+    <!-- RING -->
+    <div class="divider reveal">Ring R = {S, +, ×}</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Ring Axioms</div>
+        <h3>R is Abelian Group for Addition + Multiplication rules</h3>
+        <ul>
+          <li>A1–A5 for addition (abelian group)</li>
+          <li>M1: Closure under ×</li>
+          <li>M2: Associativity of ×</li>
+          <li>M3: Distributive — a(b+c) = ab+ac</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Commutative Ring</div>
+        <h3>+ M4</h3>
+        <ul>
+          <li>M4: ab = ba for all a,b ∈ R</li>
+        </ul>
+        <div class="card-tag" style="margin-top:1rem">Integral Domain</div>
+        <ul>
+          <li>M5: Multiplicative identity — a·1 = 1·a = a</li>
+          <li>M6: No zero divisors — ab=0 ⟹ a=0 or b=0</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- FIELD -->
+    <div class="divider reveal">Field F = {S, +, ×}</div>
+    <div class="callout reveal">
+      <strong>Field</strong> = Integral Domain + Multiplicative Inverse for every non-zero element.<br>
+      <strong>M7</strong>: For each a ∈ F (a≠0), ∃ a⁻¹ such that a·a⁻¹ = a⁻¹·a = 1
+    </div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Field Properties</div>
+        <h3>Both operations form abelian groups</h3>
+        <ul>
+          <li>Abelian group under addition</li>
+          <li>Abelian group under multiplication (ignoring 0)</li>
+          <li>Satisfies A1–A5, M1–M7</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Key Insight</div>
+        <h3>Hierarchy</h3>
+        <div class="formula"><span class="hl">Group</span> ⟶ <span class="hl2">Ring</span> ⟶ <span class="hl3">Field</span>
+More axioms ⟹ Richer structure
+Fields most useful in cryptography</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 2 — GALOIS FIELDS
+═══════════════════════════════════════ -->
+<section class="section" id="s2">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">02</span>
+      <h2 class="section-title must">Galois <span>Fields</span></h2>
+    </div>
+
+    <div class="callout reveal">
+      <strong>Key Fact:</strong> Finite fields play a <em>key role</em> in cryptography. The number of elements in a finite field must be a prime power <strong>pⁿ</strong>. These are called <strong>Galois Fields GF(pⁿ)</strong>.
+    </div>
+
+    <div class="cards two reveal" style="margin-top:2rem">
+      <div class="card">
+        <div class="card-tag">GF(p)</div>
+        <h3>Prime Fields</h3>
+        <ul>
+          <li>Set of integers {0, 1, …, p−1}</li>
+          <li>Arithmetic operations <strong>modulo prime p</strong></li>
+          <li>Forms a finite field — multiplicative inverses exist</li>
+          <li>Can do +, −, ×, ÷ without leaving the field</li>
+        </ul>
+        <div class="formula" style="margin-top:1rem">GF(7) = {0, 1, 2, 3, 4, 5, 6}
+All arithmetic mod 7</div>
+      </div>
+      <div class="card">
+        <div class="card-tag">GF(2ⁿ)</div>
+        <h3>Binary Extension Fields</h3>
+        <ul>
+          <li>Polynomials with binary coefficients</li>
+          <li>Degree less than n</li>
+          <li>Reduction modulo an <em>irreducible polynomial</em> of degree n (for multiplication)</li>
+          <li>Can always find an inverse using Extended Euclid</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- GF(7) Table -->
+    <div class="divider reveal">GF(7) Multiplication Table</div>
+    <div class="reveal" style="overflow-x:auto">
+      <table class="data-table">
+        <thead>
+          <tr><th>×</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+          <tr><td>1</td><td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td></tr>
+          <tr><td>2</td><td>0</td><td>2</td><td>4</td><td>6</td><td>1</td><td>3</td><td>5</td></tr>
+          <tr><td>3</td><td>0</td><td>3</td><td>6</td><td>2</td><td>5</td><td>1</td><td>4</td></tr>
+          <tr><td>4</td><td>0</td><td>4</td><td>1</td><td>5</td><td>2</td><td>6</td><td>3</td></tr>
+          <tr><td>5</td><td>0</td><td>5</td><td>3</td><td>1</td><td>6</td><td>4</td><td>2</td></tr>
+          <tr><td>6</td><td>0</td><td>6</td><td>5</td><td>4</td><td>3</td><td>2</td><td>1</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="reveal" style="font-size:.8rem;color:var(--dim);margin-top:.5rem">Each row/column contains each non-zero element exactly once (Latin square property of fields)</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 3 — POLYNOMIAL ARITHMETIC
+═══════════════════════════════════════ -->
+<section class="section" id="s3">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">03</span>
+      <h2 class="section-title">Polynomial <span>Arithmetic</span></h2>
+    </div>
+
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">General Form</div>
+        <h3>Polynomial</h3>
+        <div class="formula">f(x) = <span class="hl">aₙ</span>xⁿ + <span class="hl">aₙ₋₁</span>xⁿ⁻¹ + … + <span class="hl">a₁</span>x + <span class="hl">a₀</span>
+     = Σ aᵢxⁱ</div>
+        <p>x is the <em>indeterminate</em> — we don't evaluate at a specific value</p>
+      </div>
+      <div class="card">
+        <div class="card-tag">Three Levels</div>
+        <h3>Alternatives</h3>
+        <ul>
+          <li>Ordinary polynomial arithmetic</li>
+          <li>Poly arithmetic with coefficients mod p</li>
+          <li>Poly arithmetic with coefs mod p AND polynomials mod m(x)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider reveal">Ordinary Polynomial Arithmetic</div>
+    <div class="formula reveal">let f(x) = x³ + x² + 2   and   g(x) = x² – x + 1
+
+<span class="hl">f(x) + g(x)</span> = x³ + 2x² – x + 3   (add corresponding coefficients)
+<span class="hl">f(x) – g(x)</span> = x³ + x + 1
+<span class="hl">f(x) × g(x)</span> = x⁵ + 3x² – 2x + 2  (multiply all terms)</span></div>
+
+    <div class="divider reveal">Polynomial Arithmetic with Coefficients mod 2</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Binary Coefficients</div>
+        <h3>Mod 2 Poly Arithmetic</h3>
+        <ul>
+          <li>All coefficients are 0 or 1</li>
+          <li>Addition = XOR of coefficients</li>
+          <li>Subtraction = Addition (mod 2)</li>
+        </ul>
+        <div class="formula">f(x) = x³ + x²,  g(x) = x² + x + 1
+
+f(x) + g(x) = <span class="hl">x³ + x + 1</span>
+f(x) × g(x) = <span class="hl">x⁵ + x²</span></div>
+      </div>
+      <div class="card">
+        <div class="card-tag">Division</div>
+        <h3>Polynomial Division</h3>
+        <ul>
+          <li>f(x) = q(x)·g(x) + r(x)</li>
+          <li>r(x) = f(x) mod g(x)</li>
+          <li>If r(x)=0, then g(x) <em>divides</em> f(x)</li>
+        </ul>
+        <div class="callout" style="margin-top:.75rem">
+          <strong>Irreducible polynomial</strong> — g(x) has no divisors other than itself and 1 (analogous to a prime number).<br>
+          Arithmetic modulo an irreducible polynomial forms a <strong>field</strong>.
+        </div>
+      </div>
+    </div>
+
+    <div class="divider reveal">GCD for Polynomials — Euclidean Algorithm</div>
+    <div class="formula reveal"><span class="hl">Euclid(a(x), b(x)):</span>
+  if (b(x) = 0) then return a(x);
+  else return Euclid(b(x), <span class="hl2">a(x) mod b(x)</span>);
+
+c(x) = GCD(a(x), b(x)) if c(x) is the poly of greatest degree
+that divides both a(x) and b(x)</div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 4 — PUBLIC KEY CRYPTOGRAPHY
+═══════════════════════════════════════ -->
+<section class="section" id="s4">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">04</span>
+      <h2 class="section-title must">Public-Key <span>Cryptography</span></h2>
+    </div>
+
+    <div class="compare reveal">
+      <div class="compare-col">
+        <h4 style="color:var(--accent)">🔐 Private-Key (Symmetric)</h4>
+        <ul class="card" style="padding:0;background:transparent">
+          <li>One shared key for encrypt & decrypt</li>
+          <li>Both parties must know the key</li>
+          <li>If key is disclosed → compromised</li>
+          <li>Fast computation</li>
+        </ul>
+      </div>
+      <div class="compare-col">
+        <h4 style="color:var(--accent2)">🔑 Public-Key (Asymmetric)</h4>
+        <ul class="card" style="padding:0;background:transparent">
+          <li>Two keys: public & private</li>
+          <li>Public key: anyone can encrypt / verify</li>
+          <li>Private key: owner decrypts / signs</li>
+          <li>Proposed by Diffie & Hellman, 1976</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider reveal">The Six Ingredients</div>
+    <div class="cards reveal">
+      <div class="card"><div class="card-tag">Ingredient 1</div><h3>Plaintext</h3><p>The readable message or data fed as input to the algorithm.</p></div>
+      <div class="card"><div class="card-tag">Ingredient 2</div><h3>Encryption Algorithm</h3><p>Performs transformations on the plaintext using the key.</p></div>
+      <div class="card"><div class="card-tag">Ingredient 3</div><h3>Public & Private Keys</h3><p>A pair: if one encrypts, the other decrypts. Exact transformations depend on which key is provided.</p></div>
+      <div class="card"><div class="card-tag">Ingredient 4</div><h3>Ciphertext</h3><p>Scrambled output. Depends on both the plaintext and the key. Two different keys → two different ciphertexts.</p></div>
+      <div class="card"><div class="card-tag">Ingredient 5</div><h3>Decryption Algorithm</h3><p>Accepts ciphertext and matching key to recover the original plaintext.</p></div>
+    </div>
+
+    <div class="divider reveal">Applications — Three Categories</div>
+    <div class="cards reveal">
+      <div class="card"><div class="card-tag">Category 1</div><h3>Encryption / Decryption</h3><p>Provides secrecy. Encrypt with public key, decrypt with private key.</p></div>
+      <div class="card"><div class="card-tag">Category 2</div><h3>Digital Signatures</h3><p>Provides authentication. Sign with private key, verify with public key.</p></div>
+      <div class="card"><div class="card-tag">Category 3</div><h3>Key Exchange</h3><p>Exchange session keys. Some algorithms support all uses; others are specific.</p></div>
+    </div>
+
+    <div class="callout reveal" style="margin-top:2rem">
+      <strong>Why Public-Key?</strong> Two key problems it addresses:<br>
+      1. <strong>Key Distribution</strong> — how to have secure comms in general without prior shared key<br>
+      2. <strong>Digital Signatures</strong> — how to verify a message comes intact from the claimed sender
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 5 — RSA
+═══════════════════════════════════════ -->
+<section class="section" id="s5">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">05</span>
+      <h2 class="section-title must">RSA <span>Algorithm</span></h2>
+    </div>
+
+    <div class="callout reveal">
+      <strong>RSA</strong> — Rivest, Shamir & Adleman, MIT, 1977. Best known & widely used public-key scheme. Based on exponentiation in a finite (Galois) field over integers modulo a prime. Security due to the <strong>difficulty of factoring large numbers</strong>.
+    </div>
+
+    <div class="divider reveal">Key Setup — Step by Step</div>
+    <div class="steps reveal">
+      <div class="step"><span class="step-num">01</span><div class="step-body"><h4>Select two large primes</h4><p>Choose large primes <strong>p</strong> and <strong>q</strong> at random</p></div></div>
+      <div class="step"><span class="step-num">02</span><div class="step-body"><h4>Compute modulus n</h4><p><strong>n = p × q</strong></p></div></div>
+      <div class="step"><span class="step-num">03</span><div class="step-body"><h4>Compute Euler's totient φ(n)</h4><p><strong>φ(n) = (p−1)(q−1)</strong></p></div></div>
+      <div class="step"><span class="step-num">04</span><div class="step-body"><h4>Select encryption key e</h4><p>Choose e where <strong>1 &lt; e &lt; φ(n)</strong> and <strong>gcd(e, φ(n)) = 1</strong></p></div></div>
+      <div class="step"><span class="step-num">05</span><div class="step-body"><h4>Compute decryption key d</h4><p>Solve <strong>e·d ≡ 1 mod φ(n)</strong>, 0 ≤ d ≤ n</p></div></div>
+      <div class="step"><span class="step-num">06</span><div class="step-body"><h4>Publish / Keep secret</h4><p>Public key: <strong>PU = {e, n}</strong> | Private key: <strong>PR = {d, n}</strong></p></div></div>
+    </div>
+
+    <div class="divider reveal">Encryption & Decryption</div>
+    <div class="formula reveal"><span class="hl">ENCRYPT:</span>  C = Mᵉ mod n    (sender uses public key {e, n})
+<span class="hl2">DECRYPT:</span>  M = Cᵈ mod n    (owner uses private key {d, n})
+
+Note: Message M must be smaller than modulus n</div>
+
+    <div class="divider reveal">Why RSA Works — Euler's Theorem</div>
+    <div class="formula reveal">Euler's Theorem:  a<span class="hl">φ(n)</span> mod n = 1   (where gcd(a,n)=1)
+
+Proof of Correctness:
+  Cᵈ = (Mᵉ)ᵈ = M<span class="hl">ᵉ·ᵈ</span> = M<span class="hl">1+k·φ(n)</span>
+     = M¹ · (M<span class="hl">φ(n)</span>)ᵏ
+     = M¹ · (1)ᵏ = <span class="hl2">M mod n</span>  ✓</div>
+
+    <div class="divider reveal">Worked Example</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Key Setup</div>
+        <h3>p=17, q=11</h3>
+        <div class="formula">n = 17 × 11 = <span class="hl">187</span>
+φ(n) = 16 × 10 = <span class="hl">160</span>
+e = 7  (gcd(7,160)=1)
+d = 23 (7×23 mod 160 = 1)
+
+PU = {7, 187}
+PR = {23, 187}</div>
+      </div>
+      <div class="card">
+        <div class="card-tag">Encrypt/Decrypt  M=88</div>
+        <h3>Encrypt then Decrypt</h3>
+        <div class="formula">C = 88⁷ mod 187 = <span class="hl">11</span>
+
+Calculation:
+88¹ mod 187 = 88
+88² mod 187 = 77
+88⁴ mod 187 = 132
+88⁷ mod 187 = (88×77×132) mod 187 = <span class="hl">11</span>
+
+M = 11²³ mod 187 = <span class="hl2">88</span>  ✓</div>
+      </div>
+    </div>
+
+    <div class="divider reveal">Exam Practice Numericals</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Problem 1</div>
+        <h3>C=10, e=5, n=35. Find M</h3>
+        <div class="formula">n=35=5×7  → p=5, q=7
+φ(n) = 4×6 = 24
+e=5 → d: 5d ≡ 1 mod 24 → d=<span class="hl">5</span>
+M = 10⁵ mod 35 = <span class="hl2">10</span></div>
+      </div>
+      <div class="card">
+        <div class="card-tag">Problem 2</div>
+        <h3>p=3, q=11, e=7, M=5</h3>
+        <div class="formula">n = 3×11 = 33
+φ(n) = 2×10 = 20
+d: 7d ≡ 1 mod 20 → d=<span class="hl">3</span>
+C = 5⁷ mod 33 = 78125 mod 33 = <span class="hl2">14</span></div>
+      </div>
+      <div class="card">
+        <div class="card-tag">Problem 3</div>
+        <h3>p=5, q=11, e=3, M=9</h3>
+        <div class="formula">n = 5×11 = 55
+φ(n) = 4×10 = 40
+d: 3d ≡ 1 mod 40 → d=<span class="hl">27</span>
+C = 9³ mod 55 = 729 mod 55 = <span class="hl2">14</span></div>
+      </div>
+    </div>
+
+    <div class="divider reveal">Square and Multiply Algorithm (Fast Exponentiation)</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Algorithm</div>
+        <h3>Only O(log₂ n) multiplications</h3>
+        <div class="formula"><span class="hl">c = 0; f = 1</span>
+for i = k downto 0:
+    c = 2 × c
+    f = (f × f) mod n
+    if bᵢ == 1:
+        c = c + 1
+        f = (f × a) mod n
+return f</div>
+      </div>
+      <div class="card">
+        <div class="card-tag">Example</div>
+        <h3>Using binary exponent</h3>
+        <ul>
+          <li>7⁵ = 7⁴·7¹ = 3·7 = 10 mod 11</li>
+          <li>3¹²⁹ = 3¹²⁸·3¹ = 5·3 = 4 mod 11</li>
+        </ul>
+        <div class="callout" style="margin-top:.75rem">Common choices for e: <strong>65537</strong> (= 2¹⁶+1), or 3 or 17. Using e=3 can be attacked via Chinese Remainder Theorem.</div>
+      </div>
+    </div>
+
+    <div class="divider reveal">RSA Security Attacks</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">Attack 1</div>
+        <h3>Brute Force</h3>
+        <p>Try all possible private keys. Infeasible for 1024–2048 bit keys.</p>
+      </div>
+      <div class="card">
+        <div class="card-tag">Attack 2</div>
+        <h3>Mathematical (Factoring)</h3>
+        <ul>
+          <li>Factor n = p·q → compute φ(n) → compute d</li>
+          <li>Or determine φ(n) directly</li>
+          <li>Or find d directly</li>
+          <li>Currently: assume 1024–2048 bit RSA is secure</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Attack 3</div>
+        <h3>Timing Attacks</h3>
+        <ul>
+          <li>Paul Kocher, mid-1990s</li>
+          <li>Exploit timing variations in operations</li>
+          <li>Infer operand size from time taken</li>
+          <li>Countermeasures: constant-time exponentiation, random delays, blind values</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Attack 4</div>
+        <h3>Chosen Ciphertext (CCA)</h3>
+        <ul>
+          <li>Attacker chooses ciphertexts and gets decrypted plaintext back</li>
+          <li>Exploits multiplicative properties of RSA</li>
+          <li>Counter: random padding of plaintext</li>
+          <li>Or use OAEP (Optimal Asymmetric Encryption Padding)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 6 — DIFFIE-HELLMAN
+═══════════════════════════════════════ -->
+<section class="section" id="s6">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">06</span>
+      <h2 class="section-title must">Diffie-Hellman <span>Key Exchange</span></h2>
+    </div>
+
+    <div class="callout reveal">
+      <strong>First public-key type scheme proposed.</strong> Diffie & Hellman, 1976 (Williamson at UK CESG secretly proposed it in 1970).<br>
+      <em>"Astounding concept: two parties can carry on a public conversation and still end up with a secret that only they know!"</em>
+    </div>
+
+    <div class="cards reveal" style="margin-top:2rem">
+      <div class="card">
+        <div class="card-tag">Key Idea</div>
+        <h3>Public Secret Sharing</h3>
+        <ul>
+          <li>Cannot exchange arbitrary messages</li>
+          <li>Establishes a <em>common secret key</em></li>
+          <li>Known only to the two participants</li>
+          <li>Used as session key in symmetric encryption</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Security Basis</div>
+        <h3>Discrete Logarithm Problem</h3>
+        <ul>
+          <li>Easy: compute y = aˣ mod q</li>
+          <li>Hard: given y, compute x (discrete log)</li>
+          <li>Similar difficulty to factoring</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider reveal">Protocol</div>
+    <div class="formula reveal"><span class="hl">SETUP:</span> All users agree on global parameters:
+  q = large prime
+  a = primitive root mod q
+
+<span class="hl">ALICE:</span>
+  Chooses secret xₐ &lt; q
+  Computes public key: <span class="hl2">yₐ = aˣᴬ mod q</span>
+
+<span class="hl">BOB:</span>
+  Chooses secret x_B &lt; q
+  Computes public key: <span class="hl2">y_B = aˣᴮ mod q</span>
+
+<span class="hl3">SHARED SESSION KEY:</span>
+  K_AB = aˣᴬˣᴮ mod q
+  Alice computes: K_AB = y_B^xₐ mod q
+  Bob computes:   K_AB = yₐ^x_B mod q
+  (Same result!)</div>
+
+    <div class="divider reveal">Worked Example</div>
+    <div class="formula reveal">Prime q = 353,  Primitive root a = 3
+
+Alice: xₐ = 97  →  yₐ = 3⁹⁷ mod 353  = <span class="hl">40</span>
+Bob:   x_B = 233 →  y_B = 3²³³ mod 353 = <span class="hl">248</span>
+
+Alice: K_AB = 248⁹⁷ mod 353 = <span class="hl2">160</span>
+Bob:   K_AB = 40²³³ mod 353  = <span class="hl2">160</span>  ✓</div>
+
+    <div class="divider reveal">Man-in-the-Middle (MITM) Attack</div>
+    <div class="callout warn reveal">
+      <strong>Also called "Bucket Brigade" Attack.</strong> Both random and static D-H keys are vulnerable.
+    </div>
+    <div class="steps reveal">
+      <div class="step"><span class="step-num">1</span><div class="step-body"><h4>Darth Prepares</h4><p>Creates two separate private/public key pairs (one for each end)</p></div></div>
+      <div class="step"><span class="step-num">2</span><div class="step-body"><h4>Alice Sends Public Key</h4><p>Alice transmits her public key yₐ to Bob</p></div></div>
+      <div class="step"><span class="step-num">3</span><div class="step-body"><h4>Darth Intercepts</h4><p>Darth intercepts yₐ, sends his first public key to Bob instead. Darth calculates a shared key with Alice.</p></div></div>
+      <div class="step"><span class="step-num">4</span><div class="step-body"><h4>Bob Responds</h4><p>Bob receives Darth's key and calculates a shared key — with Darth, not Alice</p></div></div>
+      <div class="step"><span class="step-num">5–7</span><div class="step-body"><h4>Mirror on Bob's Side</h4><p>Bob sends his key; Darth intercepts and sends second key to Alice. Alice calculates shared key with Darth.</p></div></div>
+    </div>
+    <div class="callout warn reveal">
+      <strong>Result:</strong> Darth has a private, unauthenticated channel with each of Alice and Bob. Can intercept, decrypt, re-encrypt, and forward all messages.<br><br>
+      <strong>Countermeasures:</strong> Public Key Infrastructure (PKI), PGP web of trust, or scheduling/timing-based prevention.
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 7 — ELGAMAL
+═══════════════════════════════════════ -->
+<section class="section" id="s7">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">07</span>
+      <h2 class="section-title must">ElGamal <span>Cryptography</span></h2>
+    </div>
+
+    <div class="callout reveal">
+      <strong>ElGamal</strong> is a public-key cryptosystem related to Diffie-Hellman. Uses exponentiation in a finite field. Security based on difficulty of computing <strong>discrete logarithms</strong>.
+    </div>
+
+    <div class="divider reveal">Key Generation</div>
+    <div class="formula reveal"><span class="hl">Alice's Key:</span>
+  Chooses secret xₐ:   1 &lt; xₐ &lt; q−1
+  Computes public key:  yₐ = aˣᴬ mod q</div>
+
+    <div class="divider reveal">Encryption (Bob encrypts for Alice)</div>
+    <div class="formula reveal"><span class="hl">Message M in range [0, q−1]</span>  (longer → send as blocks)
+Choose random integer k,  1 ≤ k ≤ q−1
+
+<span class="hl2">One-time key:</span>  K = yₐᵏ mod q
+
+<span class="hl3">Ciphertext pair (C₁, C₂):</span>
+  C₁ = aᵏ mod q        // like D-H public key
+  C₂ = K·M mod q       // encrypted message</div>
+
+    <div class="divider reveal">Decryption (Alice recovers M)</div>
+    <div class="formula reveal"><span class="hl">Recover K:</span>   K = C₁^xₐ mod q
+<span class="hl2">Recover M:</span>   M = C₂ · K⁻¹ mod q
+
+⚠️  A unique K must be used each time — otherwise insecure!</div>
+
+    <div class="divider reveal">Worked Example — GF(19), a=10</div>
+    <div class="formula reveal">Alice: xₐ = 5,  yₐ = 10⁵ mod 19 = <span class="hl">3</span>
+
+Bob sends M = 17, chooses k = 6:
+  K  = 3⁶ mod 19 = <span class="hl">7</span>
+  C₁ = 10⁶ mod 19 = <span class="hl">11</span>
+  C₂ = 7·17 mod 19 = <span class="hl">5</span>
+  Sends: (<span class="hl2">11, 5</span>)
+
+Alice decrypts:
+  K  = 11⁵ mod 19 = <span class="hl">7</span>
+  K⁻¹ = 7⁻¹ mod 19 = <span class="hl">11</span>    (7×11 = 77 ≡ 1 mod 19 ✓)
+  M  = 5·11 mod 19 = <span class="hl2">17</span>  ✓</div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 8 — ECC
+═══════════════════════════════════════ -->
+<section class="section" id="s8">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">08</span>
+      <h2 class="section-title must">Elliptic Curve <span>Cryptography</span></h2>
+    </div>
+
+    <div class="callout reveal">
+      <strong>ECC</strong> — an alternative to RSA/D-H using elliptic curves. Offers <strong>same security with much smaller key sizes</strong>. Newer but not as well analysed.
+    </div>
+
+    <div class="cards reveal" style="margin-top:2rem">
+      <div class="card">
+        <div class="card-tag">Real Elliptic Curve</div>
+        <h3>Cubic Form</h3>
+        <div class="formula">y² = x³ + <span class="hl">a</span>x + <span class="hl">b</span>
+x, y, a, b ∈ ℝ
+Also define zero point O</div>
+        <p style="margin-top:.75rem;font-size:.83rem;color:var(--muted)">Addition P+Q: reflect the intersection R with the x-axis. Geometric interpretation.</p>
+      </div>
+      <div class="card">
+        <div class="card-tag">Finite Elliptic Curves</div>
+        <h3>Two Families</h3>
+        <ul>
+          <li><strong>Prime curves Ep(a,b)</strong> — defined over Zp, integers mod prime. Best in software.</li>
+          <li><strong>Binary curves E₂ₘ(a,b)</strong> — defined over GF(2ⁿ), binary polynomial coefficients. Best in hardware.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider reveal">The Hard Problem — Elliptic Curve Discrete Log</div>
+    <div class="formula reveal"><span class="hl">EASY:</span>  Given k, P  →  compute Q = kP  (k times point addition)
+<span class="hl3">HARD:</span>  Given Q, P  →  find k  (Elliptic Curve Logarithm Problem)
+
+This is the security foundation of ECC.
+Example: E₂₃(9, 17)</div>
+
+    <div class="divider reveal">ECC Diffie-Hellman</div>
+    <div class="formula reveal">Select curve Eq(a,b) and base point G = (x₁, y₁)
+  with large order n such that nG = O
+
+<span class="hl">Alice:</span>  nₐ &lt; n (private),  Pₐ = nₐG (public)
+<span class="hl2">Bob:</span>    n_B &lt; n (private),  P_B = n_BG (public)
+
+Shared key: K = nₐ·P_B = n_B·Pₐ = nₐ·n_B·G  ✓</div>
+
+    <div class="divider reveal">ECC Encryption / Decryption</div>
+    <div class="formula reveal">Encode message M as point Pₘ on the curve.
+Each user has private nₐ and public Pₐ = nₐG.
+
+<span class="hl">Encrypt:</span>  Cₘ = {kG, Pₘ + kP_B}   (k = random)
+<span class="hl2">Decrypt:</span>  Pₘ + kP_B − n_B(kG)
+         = Pₘ + k(n_BG) − n_B(kG)
+         = <span class="hl3">Pₘ</span>  ✓</div>
+
+    <div class="divider reveal">Comparable Key Sizes</div>
+    <div style="overflow-x:auto" class="reveal">
+      <table class="data-table">
+        <thead>
+          <tr><th>Symmetric (bits)</th><th>ECC n (bits)</th><th>RSA/DSA modulus (bits)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>56</td><td>112</td><td>512</td></tr>
+          <tr><td>80</td><td>160</td><td>1024</td></tr>
+          <tr><td>112</td><td>224</td><td>2048</td></tr>
+          <tr><td>128</td><td>256</td><td>3072</td></tr>
+          <tr><td>192</td><td>384</td><td>7680</td></tr>
+          <tr><td>256</td><td>512</td><td>15360</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout green reveal" style="margin-top:.75rem">
+      ECC offers <strong>significant computational advantages</strong>: smaller keys → less storage, faster computation, lower power use. Ideal for embedded systems, mobile devices.
+    </div>
+
+    <div class="divider reveal">PRNG Based on Asymmetric Ciphers</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">PRNG from RSA</div>
+        <h3>Micali-Schnorr PRNG</h3>
+        <ul>
+          <li>Uses RSA-based exponentiation</li>
+          <li>Specified in ANSI X9.82 and ISO 18031</li>
+          <li>Much slower than symmetric PRNG</li>
+          <li>Use only to generate short bit sequences (e.g., keys)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">PRNG from ECC</div>
+        <h3>Dual Elliptic Curve PRNG</h3>
+        <div class="formula" style="font-size:.75rem">for i = 1 to k:
+  sᵢ = x(sᵢ₋₁ · P)
+  rᵢ = lsb₂₄₀(x(sᵢ · Q))
+return r₁, …, rₖ</div>
+        <p style="margin-top:.5rem;font-size:.8rem">NIST SP 800-9. Some controversy on security/efficiency. Use only if just have ECC.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 9 — ATTACKS & STANDARDS
+═══════════════════════════════════════ -->
+<section class="section" id="s9">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-num">09</span>
+      <h2 class="section-title">Attacks & <span>Standards</span></h2>
+    </div>
+
+    <div class="divider reveal">Attacks on Public Key Cryptography</div>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="card-tag">RSA Specific</div>
+        <h3>Factoring Attack</h3>
+        <ul>
+          <li>Progress in integer factoring directly threatens RSA</li>
+          <li>Best algorithm: Lenstra Sieving — 200 decimal digits (663 bits) as of 2005</li>
+          <li>Safe: 1024–2048 bit RSA</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Any Public Key</div>
+        <h3>Side Channel Attacks</h3>
+        <ul>
+          <li>Timing attacks (Paul Kocher)</li>
+          <li>Power analysis attacks</li>
+          <li>Exploit physical implementation, not the math</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Quantum Threat</div>
+        <h3>Quantum Computing</h3>
+        <ul>
+          <li>Breaks RSA with key-length computation</li>
+          <li>Breaks ECC with 2× key-length computation</li>
+          <li>Shor's algorithm can factor n in polynomial time</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Any — Limited Plaintext</div>
+        <h3>Cube-Root Attack (RSA e=3)</h3>
+        <ul>
+          <li>If message is "small" and m³ &lt; n</li>
+          <li>Then just take cube root of c to get m!</li>
+          <li>Fix: require e &gt; 3, or pad m to make it "big"</li>
+          <li>PKCS#1 prevents this</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout warn reveal" style="margin-top:1rem">
+      <strong>Limited Plaintext Attack (any scheme):</strong> If only a few plaintexts are possible, encrypt all of them and look for a match. Countermeasure: require a random "confounder" in plaintext.
+    </div>
+
+    <div class="divider reveal">PKCS Standards</div>
+    <div style="overflow-x:auto" class="reveal">
+      <table class="data-table">
+        <thead>
+          <tr><th>Standard</th><th>Title</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>PKCS#1</td><td>RSA Cryptography</td><td>Algorithms & encoding/padding for RSA encryption, decryption, and signatures. Prevents many attacks. Forces m to be "big", inserts confounder.</td></tr>
+          <tr><td>PKCS#3</td><td>Diffie-Hellman Key Agreement</td><td>Algorithms, encoding, and protocol for public secret sharing based on D-H.</td></tr>
+          <tr><td>PKCS#5</td><td>Password-based Encryption</td><td>Standard and secure way to derive a secret key from a text password.</td></tr>
+          <tr><td>PKCS#7</td><td>Cryptographic Message Syntax</td><td>Formats for signing or encrypting messages and for certificate distribution.</td></tr>
+          <tr><td>PKCS#8</td><td>Private-Key Information Syntax</td><td>Formats for carrying private certificate key pairs (encrypted or unencrypted).</td></tr>
+          <tr><td>PKCS#11</td><td>Cryptographic Token Interface</td><td>Generic interface to crypto tokens for single sign-on, public key encryption, disk encryption.</td></tr>
+          <tr><td>PKCS#12</td><td>Personal Information Exchange</td><td>File format to store private keys and public key certificates, protected by a symmetric key.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="divider reveal">Standards Bodies</div>
+    <div class="cards reveal">
+      <div class="card"><div class="card-tag">RSA Labs</div><h3>PKCS Series</h3><p>De facto standards. Also covers other cryptographic operations beyond RSA.</p></div>
+      <div class="card"><div class="card-tag">NIST</div><h3>FIPS Standards</h3><p>Federal Information Processing Standards. Include DSA, SHA, AES, and others.</p></div>
+      <div class="card"><div class="card-tag">IETF</div><h3>Numerous Standards</h3><p>Internet Engineering Task Force. TLS, IPsec, and many protocol-level crypto standards.</p></div>
+      <div class="card"><div class="card-tag">ITU-T / ISO</div><h3>X.509v3 Certificates</h3><p>X.509 defines certificate format for PKI. ISO/IEC covers certs and authentication protocols.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer style="padding:3rem 6vw;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem">
+  <div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--muted)">Unit III — Network Security & Cryptography</div>
+    <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--dim);margin-top:.25rem;letter-spacing:.1em">GROUP → RING → FIELD → GF(p) → GF(2ⁿ) → RSA → D-H → ELGAMAL → ECC</div>
+  </div>
+  <div class="unit-nav" style="margin:0">
+    <a href="unit4.html">Unit IV →</a>
+    <a href="unit5.html">Unit V →</a>
+  </div>
+</footer>
+
+<script>
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), 60);
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.08 });
+  reveals.forEach(r => obs.observe(r));
+
+  // Floating nav dots
+  const dots = document.querySelectorAll('.float-dot');
+  const sections = ['hero','s1','s2','s3','s4','s5','s6','s7','s8','s9'].map(id => document.getElementById(id));
+
+  dots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      const target = document.getElementById(dot.dataset.target);
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+
+  window.addEventListener('scroll', () => {
+    const scrollY = window.scrollY + window.innerHeight / 2;
+    let active = 0;
+    sections.forEach((s, i) => {
+      if (s && s.offsetTop <= scrollY) active = i;
+    });
+    dots.forEach((d, i) => d.classList.toggle('active', i === active));
+  }, { passive: true });
+</script>
+</body>
+</html>
